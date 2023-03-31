@@ -68,3 +68,4 @@ jobs:
           source: "todo_list_app/.env"
           target: "todo_list_server"
           strip_components: 1
+
