@@ -14,5 +14,3 @@ RUN pip install --upgrade pip \
     && pip install poetry \
     && poetry config virtualenvs.create false \
     && poetry install \
-
-CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
