@@ -23,58 +23,35 @@ Python v.3.11
 Poetry v.1.4.1   
 Django v.4.1.7   
 Django REST Framework v.3.14.0
-## Local start
-Create and activate virtual environment
+## Server start
+Clone repository
 ``` python
-python3 -m venv venv
-source /venv/bin/activate
+git clone https://github.com/MichaelRodionov/TODOList.git
 ```
-Install and activate poetry
-``` python
-pip install poetry
-poetry init
-```
-Install dependencies
-``` python
-poetry install
-```
-Create an `.env` file and fill it in according to the listed fields in the env_example.txt file in the project root folder.
+Create your own repository
 
-Install PostgreSQL   
+Create GitHub Secrets in your repository with parameters:
 ``` python
-# install homebrew for MacOS
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-
-# install postgres
-brew install postgresql@15
+# Django
+SECRET_KEY  # django application secret key
+# PostgreSQL
+POSTGRES_USER  # your postgres username
+POSTGRES_PASSWORD # your postgres password
+POSTGRES_DB  # your postgres database name
+# HOST
+HOST  # your hostname (domain or IP address)
+USER  # your host username
+PASSWORD # your host password
+# Docker
+DOCKERHUB_TOKEN  # your dockerhub token
+DOCKERHUB_USERNAME  # your dockerhub username
 ```
-Create database   
+Add remote to your GitHub repository by repository URL   
+Push code to your repository
 ``` python
-CREATE DATABASE <database name>;
-
-# enter database with current user
-psql -U <username> -d <database name>
-
-# create user with password
-CREATE USER <username> WITH PASSWORD <password>;
-
-# give priveleges to new user
-GRANT ALL PRIVILEGES ON <database name> TO <username>;
+git add .  # add all files to Git
+git commit -m 'add project'  # initial commit
+git push  # push to repository
 ```
-Make and run migrations
-``` python
-./manage.py makemigrations
-./manage.py migrate
-```
-Run local server
-``` python
-./manage.py runserver
-```
-Show tables
-``` python
-# enter database
-export DATABASE_URL=postgres://<username>:<password>@localhost:5432/<database>
-psql $DATABASE_URL
-# show all tables
-\dp
-```
+---
+Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml
