@@ -69,3 +69,16 @@ jobs:
           target: "todo_list_server"
           strip_components: 1
 
+  run:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: run application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd todo_list_server
+            echo ${{ secrets.PASSWORD }} | sudo -S docker-compose up -d
