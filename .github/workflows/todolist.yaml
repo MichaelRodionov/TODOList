@@ -1,4 +1,4 @@
-name: todo_list workflow
+name: todo_list workflows
 on: [push]
 jobs:
   linter_check:
