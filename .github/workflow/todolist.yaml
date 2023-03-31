@@ -72,6 +72,8 @@ jobs:
   run:
     runs-on: ubuntu-latest
     needs: deploy
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       - name: run application
         uses: appleboy/ssh-action@master
