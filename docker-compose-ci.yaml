@@ -18,7 +18,7 @@ services:
       retries: 3
 
   migrations:
-    image: michaelrodionov/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
     container_name: migrations
     env_file:
       - .env
@@ -30,7 +30,7 @@ services:
         condition: service_healthy
 
   api:
-    image: michaelrodionov/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
     container_name: api
     env_file:
       - .env
