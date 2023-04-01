@@ -36,7 +36,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "./manage.py runserver 0.0.0.0:8000"
+      sh -c "gunicorn -b 0.0.0.0:8000 todolist.wsgi"
     ports:
       - "8000:8000"
     volumes:
