@@ -70,14 +70,14 @@ jobs:
           source: "todo_list_app/.env"
           target: "todo_list_server"
           strip_components: 1
-      - name: compy nginx config
+      - name: copy nginx config
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
-          username: ${{ secrets.HOST_USERNAME }}
-          password: ${{ secrets.HOST_PASSWORD }}
-          source: "todolist/nginx.conf"
-          target: "diploma_project"
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          source: "todo_list_app/nginx.conf"
+          target: "todo_list_server"
           strip_components: 1
 
   run:
