@@ -12,7 +12,7 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}' ]
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 3s
       timeout: 3s
       retries: 3
@@ -36,11 +36,13 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "gunicorn -b 0.0.0.0:8000 todolist.wsgi"
+      sh -c "./manage.py collectstatic -c --no-input
+      && gunicorn -b 0.0.0.0:8000 todolist.wsgi"
     ports:
       - "8000:8000"
     volumes:
       - .env:/todo_list_app/.env
+      - django_static:/todo_list_app/static
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -53,6 +55,9 @@ services:
     depends_on:
       api:
         condition: service_started
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - django_static:/usr/share/nginx/html/static
 
 volumes:
-  postgres_data:
+  django_static:
