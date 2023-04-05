@@ -13,4 +13,4 @@ COPY README.md .
 RUN pip install --upgrade pip \
     && pip install poetry \
     && poetry config virtualenvs.create false \
-    && poetry install
+    && poetry install --no-dev

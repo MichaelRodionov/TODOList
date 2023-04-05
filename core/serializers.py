@@ -10,8 +10,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
-        if data.get('password') != data.pop('password_repeat'):
+        if data.get('password') != data.get('password_repeat'):
             raise serializers.ValidationError('Password mismatch')
+        data.pop('password_repeat')
         return data
 
     def create(self, validated_data):
