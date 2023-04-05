@@ -48,7 +48,7 @@ services:
         condition: service_completed_successfully
 
   front:
-    image: sermalenk/skypro-front:lesson-34
+    image: sermalenk/skypro-front:lesson-35
     container_name: front
     ports:
       - "80:80"
