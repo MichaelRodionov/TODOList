@@ -17,6 +17,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = super().create(validated_data)
-        user.set_password(user.password)
+        user.set_password(validated_data.get('password'))
         user.save()
         return user
