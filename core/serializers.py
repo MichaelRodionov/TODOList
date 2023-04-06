@@ -28,6 +28,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        if self.context.get('view').action == 'retrieve':
+            return super().to_representation(instance)
+        data = super().to_representation(instance)
+        if 'id' in data:
+            data.pop('id')
+        return data
+
     class Meta:
         model: User = User
         fields = ('id', 'username', 'first_name', 'last_name', 'email')
