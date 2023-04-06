@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login
-from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
 from rest_framework.generics import CreateAPIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -22,6 +22,6 @@ class UserLoginView(TokenObtainPairView):
             password=request.data.get('password')
         )
         if not user:
-            raise ValidationError('Check your username or password')
+            raise serializers.ValidationError('Check your username or password')
         login(request, user)
         return super().post(request, *args, **kwargs)
