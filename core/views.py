@@ -1,9 +1,10 @@
 from django.contrib.auth import authenticate, login
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import CreateAPIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import User
-from core.serializers import UserRegistrationSerializer, UserLoginSerializer
+from core.serializers import UserRegistrationSerializer
 
 
 # ----------------------------------------------------------------
@@ -13,11 +14,9 @@ class UserCreateView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
 
-class UserLoginView(CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserLoginSerializer
+class UserLoginView(TokenObtainPairView):
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = authenticate(
             username=request.data.get('username'),
             password=request.data.get('password')
@@ -25,4 +24,4 @@ class UserLoginView(CreateAPIView):
         if not user:
             raise ValidationError('Check your username or password')
         login(request, user)
-        return super().create(request, *args, **kwargs)
+        return super().post(request, *args, **kwargs)
