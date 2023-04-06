@@ -1,7 +1,9 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, get_user_model
 from django.db.models import QuerySet
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -29,13 +31,18 @@ class UserLoginView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
-class UserDetailUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+class UserDetailUpdateView(RetrieveUpdateAPIView):
     queryset: QuerySet = User.objects.all()
     serializer = UserDetailSerializer
-    permission_classes: tuple = (IsAuthenticated, )
+    permission_classes: list = [IsAuthenticated]
 
-    # def get(self, request, *args, **kwargs) -> Response:
-    #     return super().get(request, *args, **kwargs)
+    @method_decorator(ensure_csrf_cookie)
+    def retrieve(self, request, *args, **kwargs) -> Response:
+        return super().retrieve(request, *args, **kwargs)
+
+    def get_queryset(self):
+        user = self.request.user
+        return get_user_model().objects.filter(pk=user.pk)
     #
     # def patch(self, request, *args, **kwargs) -> Response:
     #     return super().patch(request, *args, **kwargs)
@@ -43,5 +50,3 @@ class UserDetailUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     # def put(self, request, *args, **kwargs) -> Response:
     #     return super().put(request, *args, **kwargs)
     #
-    # def delete(self, request, *args, **kwargs) -> Response:
-    #     return super().delete(request, *args, **kwargs)
