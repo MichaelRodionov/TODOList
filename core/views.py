@@ -42,11 +42,9 @@ class UserDetailUpdateView(RetrieveUpdateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        self.kwargs['pk'] = user.pk
         return get_user_model().objects.filter(pk=user.pk)
-    #
-    # def patch(self, request, *args, **kwargs) -> Response:
-    #     return super().patch(request, *args, **kwargs)
-    #
-    # def put(self, request, *args, **kwargs) -> Response:
-    #     return super().put(request, *args, **kwargs)
-    #
+
+    @method_decorator(ensure_csrf_cookie)
+    def patch(self, request, *args, **kwargs) -> Response:
+        return super().patch(request, *args, **kwargs)
