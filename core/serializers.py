@@ -39,7 +39,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 
 class UserChangePasswordSerializer(serializers.ModelSerializer):
-    current_password = serializers.CharField(
+    old_password = serializers.CharField(
         required=True
     )
     new_password = serializers.CharField(
@@ -48,13 +48,12 @@ class UserChangePasswordSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
-        print(attrs)
         user = self.context.get('request').user
-        current_password, new_password = attrs.get('current_password'), attrs.get('new_password')
-        if not user.check_password(current_password):
+        old_password, new_password = attrs.get('current_password'), attrs.get('new_password')
+        if not user.check_password(old_password):
             raise serializers.ValidationError('Wrong password')
 
-        if new_password is not None and current_password == new_password:
+        if new_password is not None and old_password == new_password:
             raise serializers.ValidationError('Similar password')
         return attrs
 
