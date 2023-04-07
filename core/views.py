@@ -1,9 +1,9 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -31,7 +31,7 @@ class UserLoginView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
-class UserDetailUpdateView(RetrieveUpdateAPIView):
+class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
     queryset: QuerySet = User.objects.all()
     serializer_class = UserDetailSerializer
     permission_classes: list = [IsAuthenticated]
@@ -42,3 +42,7 @@ class UserDetailUpdateView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+    def destroy(self, request, *args, **kwargs):
+        logout(request)
+        return super().destroy(request, *args, **kwargs)
