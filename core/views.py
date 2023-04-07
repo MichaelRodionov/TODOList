@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login, get_user_model
+from django.contrib.auth import authenticate, login
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -33,16 +33,12 @@ class UserLoginView(TokenObtainPairView):
 
 class UserDetailUpdateView(RetrieveUpdateAPIView):
     queryset: QuerySet = User.objects.all()
-    serializer = UserDetailSerializer
+    serializer_class = UserDetailSerializer
     permission_classes: list = [IsAuthenticated]
+
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
     def get_object(self):
         return self.request.user
-
-    @method_decorator(ensure_csrf_cookie)
-    def retrieve(self, request, *args, **kwargs) -> Response:
-        return super().retrieve(request, *args, **kwargs)
-
-    @method_decorator(ensure_csrf_cookie)
-    def patch(self, request, *args, **kwargs) -> Response:
-        return super().patch(request, *args, **kwargs)
