@@ -1,5 +1,4 @@
 from django.contrib.auth.password_validation import validate_password
-from jsonschema._validators import required
 from rest_framework import serializers
 
 from core.models import User
