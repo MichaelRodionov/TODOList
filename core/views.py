@@ -3,13 +3,13 @@ from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import User
-from core.serializers import UserRegistrationSerializer, UserDetailSerializer
+from core.serializers import UserRegistrationSerializer, UserDetailSerializer, UserChangePasswordSerializer
 
 
 # ----------------------------------------------------------------
@@ -46,3 +46,12 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         logout(request)
         return super().destroy(request, *args, **kwargs)
+
+
+class UserUpdatePasswordView(UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

@@ -1,4 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
+from jsonschema._validators import required
 from rest_framework import serializers
 
 from core.models import User
@@ -7,8 +8,12 @@ from core.models import User
 # ----------------------------------------------------------------
 # user serializers
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(required=True)
-    password_repeat = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        required=True
+    )
+    password_repeat = serializers.CharField(
+        write_only=True
+    )
 
     def validate(self, attrs):
         if attrs.get('password') != attrs.pop('password_repeat'):
@@ -32,3 +37,31 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model: User = User
         fields = ('id', 'username', 'first_name', 'last_name', 'email')
+
+
+class UserChangePasswordSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(
+        required=True
+    )
+    new_password = serializers.CharField(
+        required=True,
+        validators=[validate_password]
+    )
+
+    def validate(self, attrs):
+        user = self.context.get('request').user
+        current_password, new_password = attrs.get('current_password'), attrs.get('new_password')
+        if not user.check_password(current_password):
+            raise serializers.ValidationError('Wrong password')
+
+        if new_password is not None and current_password == new_password:
+            raise serializers.ValidationError('Similar password')
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data.get('new_password'))
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model: User = User
+        fields: list = ['current_password', 'new_password']
