@@ -48,6 +48,7 @@ class UserChangePasswordSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
+        print(attrs)
         user = self.context.get('request').user
         current_password, new_password = attrs.get('current_password'), attrs.get('new_password')
         if not user.check_password(current_password):
