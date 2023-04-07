@@ -36,14 +36,12 @@ class UserDetailUpdateView(RetrieveUpdateAPIView):
     serializer = UserDetailSerializer
     permission_classes: list = [IsAuthenticated]
 
+    def get_object(self):
+        return self.request.user
+
     @method_decorator(ensure_csrf_cookie)
     def retrieve(self, request, *args, **kwargs) -> Response:
         return super().retrieve(request, *args, **kwargs)
-
-    def get_queryset(self):
-        user = self.request.user
-        self.kwargs['pk'] = user.pk
-        return get_user_model().objects.filter(pk=user.pk)
 
     @method_decorator(ensure_csrf_cookie)
     def patch(self, request, *args, **kwargs) -> Response:
