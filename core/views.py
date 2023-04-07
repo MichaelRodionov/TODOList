@@ -2,9 +2,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import User
@@ -44,7 +46,7 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         logout(request)
-        return super().destroy(request, *args, **kwargs)
+        return Response('Logout success', status=status.HTTP_204_NO_CONTENT)
 
 
 class UserUpdatePasswordView(UpdateAPIView):
