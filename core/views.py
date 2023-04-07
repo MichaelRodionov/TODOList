@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
@@ -22,14 +24,16 @@ class UserCreateView(CreateAPIView):
 
 class UserLoginView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        user = authenticate(
+        user: Any = authenticate(
             username=request.data.get('username'),
             password=request.data.get('password')
         )
         if user is None:
             raise AuthenticationFailed('Invalid username or password')
         login(request, user)
-        return super().post(request, *args, **kwargs)
+        response: Response = super().post(request, *args, **kwargs)
+        response.status_code = 204
+        return response
 
 
 class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
@@ -38,21 +42,21 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
     permission_classes: list = [IsAuthenticated]
 
     @method_decorator(ensure_csrf_cookie)
-    def dispatch(self, *args, **kwargs):
+    def dispatch(self, *args, **kwargs) -> Response:
         return super().dispatch(*args, **kwargs)
 
-    def get_object(self):
+    def get_object(self) -> Any:
         return self.request.user
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
         logout(request)
-        return Response('Logout success', status=status.HTTP_204_NO_CONTENT)
+        return Response('Sucessfull logout', status=status.HTTP_204_NO_CONTENT)
 
 
 class UserUpdatePasswordView(UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserChangePasswordSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes: list = [IsAuthenticated]
 
-    def get_object(self):
+    def get_object(self) -> Any:
         return self.request.user
