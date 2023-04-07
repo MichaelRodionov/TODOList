@@ -49,7 +49,7 @@ class UserChangePasswordSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         user = self.context.get('request').user
-        old_password, new_password = attrs.get('current_password'), attrs.get('new_password')
+        old_password, new_password = attrs.get('old_password'), attrs.get('new_password')
         if not user.check_password(old_password):
             raise serializers.ValidationError('Wrong password')
 
@@ -63,4 +63,4 @@ class UserChangePasswordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model: User = User
-        fields: list = ['current_password', 'new_password']
+        fields: list = ['old_password', 'new_password']
