@@ -96,6 +96,7 @@ SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/categories'
 SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'
 SOCIAL_AUTH_USER_MODEL = 'core.User'
+SOCIAL_AUTH_VK_EXTRA_DATA = [("email", "email")]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
