@@ -89,14 +89,13 @@ AUTHENTICATION_BACKENDS = (
 # ----------------------------------------------------------------
 # VK OAuth2.0 settings
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
-SOCIAL_AUTH_VK_SCOPE = ['email']
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
 SOCIAL_AUTH_VK_OAUTH2_KEY = env('VK_ID')
 SOCIAL_AUTH_VK_OAUTH2_SECRET = env('VK_KEY')
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/categories'
 SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'
 SOCIAL_AUTH_USER_MODEL = 'core.User'
-SOCIAL_AUTH_VK_EXTRA_DATA = [("email", "email")]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
