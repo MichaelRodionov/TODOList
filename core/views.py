@@ -50,7 +50,7 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs) -> Response:
         logout(request)
-        return Response('Sucessfull logout', status=status.HTTP_204_NO_CONTENT)
+        return Response('Successful logout', status=status.HTTP_204_NO_CONTENT)
 
 
 class UserUpdatePasswordView(UpdateAPIView):
