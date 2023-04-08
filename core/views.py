@@ -9,7 +9,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import User
 from core.serializers import UserRegistrationSerializer, UserDetailSerializer, UserChangePasswordSerializer
@@ -18,12 +17,14 @@ from core.serializers import UserRegistrationSerializer, UserDetailSerializer, U
 # ----------------------------------------------------------------
 # user views
 class UserCreateView(CreateAPIView):
+    """View to handle registration"""
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
 
 
-class UserLoginView(TokenObtainPairView):
-    def post(self, request, *args, **kwargs):
+class UserLoginView(CreateAPIView):
+    """View to handle login"""
+    def post(self, request, *args, **kwargs) -> Response:
         user: Any = authenticate(
             username=request.data.get('username'),
             password=request.data.get('password')
@@ -31,12 +32,11 @@ class UserLoginView(TokenObtainPairView):
         if user is None:
             raise AuthenticationFailed('Invalid username or password')
         login(request, user)
-        response: Response = super().post(request, *args, **kwargs)
-        response.status_code = 204
-        return response
+        return Response('Successful login', status=status.HTTP_201_CREATED)
 
 
 class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
+    """View to handle profile page, update users info, logout"""
     queryset: QuerySet = User.objects.all()
     serializer_class = UserDetailSerializer
     permission_classes: list = [IsAuthenticated]
@@ -54,6 +54,7 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
 
 
 class UserUpdatePasswordView(UpdateAPIView):
+    """View to handle password change"""
     queryset = User.objects.all()
     serializer_class = UserChangePasswordSerializer
     permission_classes: list = [IsAuthenticated]

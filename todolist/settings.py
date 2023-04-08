@@ -33,8 +33,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'drf_spectacular',
+    'rest_framework',
+    'social_django',
     'core',
 ]
 
@@ -67,32 +68,36 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'todolist.wsgi.application'
+
+
 #  ----------------------------------------------------------------
 # auth user model (custom auth model)
 AUTH_USER_MODEL = 'core.User'
 
 # Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     'default': env.db()
 }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgres',
-#         'HOST': 'localhost',
-#         'PORT': '5432'
-#     }
-# }
+
+# ----------------------------------------------------------------
+# authentication setup
 AUTHENTICATION_BACKENDS = (
+    "social_core.backends.vk.VKOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 )
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
+# ----------------------------------------------------------------
+# VK OAuth2.0 settings
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+SOCIAL_AUTH_VK_SCOPE = ['email']
+SOCIAL_AUTH_VK_OAUTH2_KEY = env('VK_ID')
+SOCIAL_AUTH_VK_OAUTH2_SECRET = env('VK_KEY')
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/categories'
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'
+SOCIAL_AUTH_USER_MODEL = 'core.User'
+
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

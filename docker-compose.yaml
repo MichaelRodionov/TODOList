@@ -4,13 +4,13 @@ services:
   db:
     image: postgres
     environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: todo_list
     container_name: db
     restart: always
     healthcheck:
-      test: pg_isready -U test_user -d todo_list
+      test: pg_isready -U postgres -d todo_list
       interval: 3s
       timeout: 3s
       retries: 3

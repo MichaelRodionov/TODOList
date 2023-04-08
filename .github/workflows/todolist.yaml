@@ -43,6 +43,8 @@ jobs:
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      VK_ID: ${{ secrets.VK_ID }}
+      VK_KEY: ${{ secrets.VK_KEY }}
     steps:
       - name: clone code
         uses: actions/checkout@v2
