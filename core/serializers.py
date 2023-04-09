@@ -28,14 +28,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model: User = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password', 'password_repeat')
+        fields: tuple = ('username', 'first_name', 'last_name', 'email', 'password', 'password_repeat')
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model: User = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email')
+        fields: tuple = ('id', 'username', 'first_name', 'last_name', 'email')
 
 
 class UserChangePasswordSerializer(serializers.ModelSerializer):
@@ -63,4 +63,4 @@ class UserChangePasswordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model: User = User
-        fields: list = ['old_password', 'new_password']
+        fields: tuple = ('old_password', 'new_password')

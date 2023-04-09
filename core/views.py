@@ -29,15 +29,14 @@ class UserLoginView(CreateAPIView):
             username=request.data.get('username'),
             password=request.data.get('password')
         )
-        if user is None:
-            raise AuthenticationFailed('Invalid username or password')
-        login(request, user)
-        return Response('Successful login', status=status.HTTP_201_CREATED)
+        if user:
+            login(request, user)
+            return Response('Successful login', status=status.HTTP_201_CREATED)
+        raise AuthenticationFailed('Invalid username or password')
 
 
 class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
     """View to handle profile page, update users info, logout"""
-    queryset: QuerySet = User.objects.all()
     serializer_class = UserDetailSerializer
     permission_classes: list = [IsAuthenticated]
 
@@ -55,7 +54,6 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
 
 class UserUpdatePasswordView(UpdateAPIView):
     """View to handle password change"""
-    queryset = User.objects.all()
     serializer_class = UserChangePasswordSerializer
     permission_classes: list = [IsAuthenticated]
 
