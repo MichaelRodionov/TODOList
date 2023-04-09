@@ -1,7 +1,6 @@
 from typing import Any
 
 from django.contrib.auth import authenticate, login, logout
-from django.db.models import QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
