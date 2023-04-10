@@ -6,6 +6,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY poetry.lock pyproject.toml ./
 COPY core/. ./core
+COPY goals/. ./goals
 COPY todolist/. ./todolist
 COPY manage.py .
 COPY README.md .

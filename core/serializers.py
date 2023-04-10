@@ -32,7 +32,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-
     class Meta:
         model: User = User
         fields: tuple = ('id', 'username', 'first_name', 'last_name', 'email')
