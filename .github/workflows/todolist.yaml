@@ -14,8 +14,8 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           exclude:
-            - "./core/migrations/"
-            - "./goals/migrations/"
+            - path: "./core/migrations/"
+            - path: "./goals/migrations/"
           max-line-length: "120"
           ignore: F401
 
