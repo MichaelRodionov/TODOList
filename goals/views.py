@@ -97,7 +97,3 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_deleted = True
         instance.save()
         return instance
-
-
-# ----------------------------------------------------------------
-# comments views
