@@ -4,20 +4,8 @@ from django.utils import timezone
 
 
 # ----------------------------------------------------------------
-# category model
-class GoalCategory(models.Model):
-    title = models.CharField(
-        verbose_name="Название",
-        max_length=255
-    )
-    user = models.ForeignKey(
-        'core.User', verbose_name="Автор",
-        on_delete=models.PROTECT
-    )
-    is_deleted = models.BooleanField(
-        verbose_name="Удалена",
-        default=False
-    )
+# custom mixin
+class DatesModelMixin(models.Model):
     created = models.DateTimeField(
         verbose_name="Дата создания"
     )
@@ -32,13 +20,34 @@ class GoalCategory(models.Model):
         return super().save(*args, **kwargs)
 
     class Meta:
+        abstract = True
+
+
+# ----------------------------------------------------------------
+# category model
+class GoalCategory(DatesModelMixin):
+    title = models.CharField(
+        verbose_name="Название",
+        max_length=255
+    )
+    user = models.ForeignKey(
+        'core.User',
+        verbose_name="Автор",
+        on_delete=models.PROTECT
+    )
+    is_deleted = models.BooleanField(
+        verbose_name="Удалена",
+        default=False
+    )
+
+    class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
 
 # ----------------------------------------------------------------
 # goal model
-class Goal(models.Model):
+class Goal(DatesModelMixin):
     class Status(models.IntegerChoices):
         to_do = 1, "К выполнению"
         in_progress = 2, "В процессе"
@@ -52,16 +61,23 @@ class Goal(models.Model):
         critical = 4, "Критический"
 
     author = models.ForeignKey(
-        'core.User', on_delete=CASCADE
+        'core.User',
+        verbose_name='Автор',
+        on_delete=models.PROTECT
     )
     category = models.ForeignKey(
-        GoalCategory, on_delete=CASCADE
+        GoalCategory,
+        verbose_name='Категория',
+        on_delete=CASCADE
     )
     title = models.CharField(
+        verbose_name='Название',
         max_length=500
     )
     description = models.TextField(
-        max_length=2000, null=True
+        verbose_name='Описание',
+        max_length=2000,
+        null=True
     )
     status = models.PositiveSmallIntegerField(
         verbose_name='Статус',
@@ -74,25 +90,38 @@ class Goal(models.Model):
         default=Priority.medium
     )
     due_date = models.DateTimeField(
-        null=True, blank=True
-    )
-    created = models.DateTimeField(
-        verbose_name="Дата создания"
-    )
-    updated = models.DateTimeField(
-        verbose_name="Дата последнего обновления"
+        verbose_name='Дедлайн',
+        null=True,
+        blank=True
     )
     is_deleted = models.BooleanField(
         verbose_name="Удалена",
         default=False
     )
 
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.created = timezone.now()
-        self.updated = timezone.now()
-        return super().save(*args, **kwargs)
-
     class Meta:
         verbose_name = 'Цель'
         verbose_name_plural = 'Цели'
+
+
+# ----------------------------------------------------------------
+# comment model
+class Comment(DatesModelMixin):
+    goal = models.ForeignKey(
+        Goal,
+        verbose_name='Цель',
+        on_delete=CASCADE
+    )
+    author = models.ForeignKey(
+        'core.User',
+        verbose_name='Автор',
+        on_delete=models.PROTECT
+    )
+    text = models.TextField(
+        verbose_name='Текст',
+        max_length=1000
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'

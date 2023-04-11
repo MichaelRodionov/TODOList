@@ -9,13 +9,13 @@ from goals.filters import GoalDateFilter
 
 # ----------------------------------------------------------------
 # category views
-class GoalCategoryCreateView(generics.CreateAPIView):
+class CategoryCreateView(generics.CreateAPIView):
     model = models.GoalCategory
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CategoryCreateSerializer
 
 
-class GoalCategoryListView(generics.ListAPIView):
+class CategoryListView(generics.ListAPIView):
     model = models.GoalCategory
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CategorySerializer
@@ -35,7 +35,7 @@ class GoalCategoryListView(generics.ListAPIView):
         )
 
 
-class GoalCategoryView(generics.RetrieveUpdateDestroyAPIView):
+class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     model = models.GoalCategory
     serializer_class = serializers.CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -82,7 +82,7 @@ class GoalListView(generics.ListAPIView):
         )
 
 
-class GoalView(generics.RetrieveUpdateDestroyAPIView):
+class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     model = models.Goal
     serializer_class = serializers.GoalSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -97,3 +97,7 @@ class GoalView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_deleted = True
         instance.save()
         return instance
+
+
+# ----------------------------------------------------------------
+# comments views

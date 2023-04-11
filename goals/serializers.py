@@ -15,18 +15,20 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(CategoryCreateSerializer):
     user = UserDetailSerializer(read_only=True)
-
-    class Meta:
-        model = models.GoalCategory
-        fields = '__all__'
-        read_only_fields = ('id', 'created', 'updated', 'user')
 
 
 # ----------------------------------------------------------------
 # goal serializers
-class GoalCreateSerializer(serializers.ModelSerializer):
+class GoalDefaultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Goal
+        fields = '__all__'
+        read_only_fields = ('id', 'created', 'updated', 'author', 'category')
+
+
+class GoalCreateSerializer(GoalDefaultSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
@@ -41,17 +43,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Not your own category')
         return instance
 
-    class Meta:
-        model = models.Goal
-        fields = '__all__'
-        read_only_fields = ('id', 'created', 'updated', 'author', 'category')
 
-
-class GoalSerializer(serializers.ModelSerializer):
+class GoalSerializer(GoalDefaultSerializer):
     author = UserDetailSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
-
-    class Meta:
-        model = models.Goal
-        fields = '__all__'
-        read_only_fields = ('id', 'created', 'updated', 'author', 'category')
