@@ -97,3 +97,43 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_deleted = True
         instance.save()
         return instance
+
+
+# ----------------------------------------------------------------
+# comments views
+class CommentCreateView(generics.CreateAPIView):
+    model = models.Comment
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.CommentCreateSerializer
+
+
+class CommentListView(generics.ListAPIView):
+    model = models.Comment
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.CommentSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = [
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    ]
+    filterset_class = GoalDateFilter
+    ordering_fields = ['-created']
+    ordering = ['created']
+    search_fields = ['goal']
+
+    def get_queryset(self):
+        return models.Comment.objects.filter(
+            author=self.request.user,
+        )
+
+
+class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    model = models.Comment
+    serializer_class = serializers.CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return models.Comment.objects.filter(
+            author=self.request.user,
+            is_deleted=False
+        )
