@@ -40,6 +40,9 @@ class GoalCategory(DatesModelMixin):
         default=False
     )
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
@@ -77,7 +80,7 @@ class Goal(DatesModelMixin):
     description = models.TextField(
         verbose_name='Описание',
         max_length=2000,
-        null=True
+        blank=True
     )
     status = models.PositiveSmallIntegerField(
         verbose_name='Статус',
@@ -94,6 +97,9 @@ class Goal(DatesModelMixin):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Цель'
