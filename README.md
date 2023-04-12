@@ -55,4 +55,3 @@ git push  # push to repository
 ```
 ---
 Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml
-
