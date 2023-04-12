@@ -6,13 +6,13 @@ from goals import models
 # ----------------------------------------------------------------
 # admin models
 class GoalCategoryAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'created', 'updated', 'is_deleted')
+    list_display = ('title', 'user', 'is_deleted')
     search_fields = ('title', 'user')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
         ('Info', {
-            'fields': ('title', 'user', 'created', 'updated')
+            'fields': ('title', 'user')
         }),
         ('Dates', {
             'fields': ('created', 'updated')
@@ -24,9 +24,9 @@ class GoalCategoryAdmin(admin.ModelAdmin):
 
 
 class GoalAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'created', 'updated', 'category', 'due_date', 'priority', 'status')
-    search_fields = ('title', 'user', 'category', 'due_date', 'priority', 'status')
-    readonly_fields = ('created', 'updated')
+    list_display = ('title', 'user', 'category', 'priority', 'status')
+    search_fields = ('title', 'user', 'category', 'priority', 'status')
+    readonly_fields = ('created', 'updated', 'due_date')
 
     fieldsets = (
         ('Info', {
@@ -42,13 +42,13 @@ class GoalAdmin(admin.ModelAdmin):
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('text', 'user', 'created', 'updated', 'goal')
+    list_display = ('text', 'user', 'goal')
     search_fields = ('text', 'user', 'goal')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
         ('Info', {
-            'fields': ('text', 'user', 'created', 'updated', 'goal')
+            'fields': ('text', 'user', 'goal')
         }),
         ('Dates', {
             'fields': ('created', 'updated')
