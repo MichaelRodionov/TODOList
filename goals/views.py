@@ -46,8 +46,12 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             is_deleted=False
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: models.GoalCategory):
         instance.is_deleted = True
+        goals = models.Goal.objects.filter(user=self.request.user, category=instance)
+        for goal in goals:
+            goal.status = models.Goal.Status.archived
+            goal.save()
         instance.save()
         return instance
 
@@ -77,9 +81,8 @@ class GoalListView(generics.ListAPIView):
 
     def get_queryset(self):
         return models.Goal.objects.filter(
-            author=self.request.user,
-            is_deleted=False
-        )
+            user=self.request.user
+        ).exclude(status=models.Goal.Status.archived)
 
 
 class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -89,12 +92,11 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return models.Goal.objects.filter(
-            author=self.request.user,
-            is_deleted=False
-        )
+            user=self.request.user,
+        ).exclude(status=models.Goal.Status.archived)
 
-    def perform_destroy(self, instance):
-        instance.is_deleted = True
+    def perform_destroy(self, instance: models.Goal):
+        instance.status = models.Goal.Status.archived
         instance.save()
         return instance
 
@@ -114,17 +116,13 @@ class CommentListView(generics.ListAPIView):
     pagination_class = LimitOffsetPagination
     filter_backends = [
         filters.OrderingFilter,
-        filters.SearchFilter,
     ]
-    filterset_class = GoalDateFilter
-    ordering_fields = ['-created']
-    ordering = ['created']
-    search_fields = ['goal']
+    ordering_fields = ['created', 'updated']
+    ordering = ['-created']
 
     def get_queryset(self):
-        return models.Comment.objects.filter(
-            author=self.request.user,
-        )
+        goal = self.request.query_params.get('goal')
+        return models.Comment.objects.filter(goal=goal)
 
 
 class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -134,6 +132,5 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return models.Comment.objects.filter(
-            author=self.request.user,
-            is_deleted=False
+            user=self.request.user
         )

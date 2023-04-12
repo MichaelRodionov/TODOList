@@ -25,11 +25,11 @@ class GoalDefaultSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Goal
         fields = '__all__'
-        read_only_fields = ('id', 'created', 'updated', 'author', 'category')
+        read_only_fields = ('id', 'created', 'updated', 'user')
 
 
 class GoalCreateSerializer(GoalDefaultSerializer):
-    author = serializers.HiddenField(
+    user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
     category = serializers.PrimaryKeyRelatedField(
@@ -45,35 +45,35 @@ class GoalCreateSerializer(GoalDefaultSerializer):
 
 
 class GoalSerializer(GoalDefaultSerializer):
-    author = UserDetailSerializer(read_only=True)
-    category = CategorySerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
+    category = CategorySerializer
 
 
 # ----------------------------------------------------------------
 # comment serializers
-class CommentDefaultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Goal
-        fields = '__all__'
-        read_only_fields = ('id', 'created', 'updated', 'author', 'goal')
-
-
-class CommentCreateSerializer(CommentDefaultSerializer):
-    author = serializers.HiddenField(
+class CommentCreateSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
-    )
-    goal = serializers.PrimaryKeyRelatedField(
-        queryset=models.Goal.objects.all()
     )
 
     def validate_goal(self, instance: models.Goal):
-        if instance.is_deleted:
-            raise serializers.ValidationError('You can not add comment in deleted goal')
-        if instance.author != self.context.get('request').user:
+        if instance.status == models.Goal.Status.archived:
+            raise serializers.ValidationError('You can not add comment in archived goal')
+        if instance.user != self.context.get('request').user:
             raise serializers.ValidationError('Not your own goal')
         return instance
 
+    class Meta:
+        model = models.Comment
+        fields = '__all__'
+        read_only_fields = ('id', 'created', 'updated', 'user')
 
-class CommentSerializer(CommentDefaultSerializer):
-    author = UserDetailSerializer(read_only=True)
-    goal = GoalSerializer(read_only=True)
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserDetailSerializer(read_only=True)
+    goal = GoalSerializer
+
+    class Meta:
+        model = models.Comment
+        fields = '__all__'
+        read_only_fields = ('id', 'created', 'updated', 'user', 'goal')

@@ -60,7 +60,7 @@ class Goal(DatesModelMixin):
         high = 3, "Высокий"
         critical = 4, "Критический"
 
-    author = models.ForeignKey(
+    user = models.ForeignKey(
         'core.User',
         verbose_name='Автор',
         on_delete=models.PROTECT
@@ -68,7 +68,7 @@ class Goal(DatesModelMixin):
     category = models.ForeignKey(
         GoalCategory,
         verbose_name='Категория',
-        on_delete=CASCADE
+        on_delete=models.PROTECT
     )
     title = models.CharField(
         verbose_name='Название',
@@ -94,10 +94,6 @@ class Goal(DatesModelMixin):
         null=True,
         blank=True
     )
-    is_deleted = models.BooleanField(
-        verbose_name="Удалена",
-        default=False
-    )
 
     class Meta:
         verbose_name = 'Цель'
@@ -112,10 +108,10 @@ class Comment(DatesModelMixin):
         verbose_name='Цель',
         on_delete=CASCADE
     )
-    author = models.ForeignKey(
+    user = models.ForeignKey(
         'core.User',
         verbose_name='Автор',
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     text = models.TextField(
         verbose_name='Текст',
