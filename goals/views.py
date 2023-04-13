@@ -140,7 +140,7 @@ class CommentCreateView(generics.CreateAPIView):
 
 class CommentListView(generics.ListAPIView):
     """View to handle GET request to get list of comment entities"""
-    model = models.Comment
+    # model = models.Comment
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
@@ -164,7 +164,7 @@ class CommentListView(generics.ListAPIView):
 
 class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """View to handle GET, PUT, DELETE requests of definite comment entity"""
-    model = models.Comment
+    # model = models.Comment
     serializer_class = serializers.CommentSerializer
     permission_classes: list = [permissions.IsAuthenticated]
 

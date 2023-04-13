@@ -5,9 +5,10 @@ from goals import models
 
 # ----------------------------------------------------------------
 # admin models
+@admin.register(models.GoalCategory)
 class GoalCategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_deleted')
-    search_fields = ('title', 'user')
+    search_fields = ('title', 'user__username')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
@@ -23,9 +24,10 @@ class GoalCategoryAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(models.Goal)
 class GoalAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'category', 'priority', 'status')
-    search_fields = ('title', 'user', 'category', 'priority', 'status')
+    search_fields = ('title', 'user__username', 'category__title')
     readonly_fields = ('created', 'updated', 'due_date')
 
     fieldsets = (
@@ -41,9 +43,10 @@ class GoalAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(models.Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('text', 'user', 'goal')
-    search_fields = ('text', 'user', 'goal')
+    search_fields = ('text', 'user__name', 'goal__title')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
@@ -54,10 +57,3 @@ class CommentAdmin(admin.ModelAdmin):
             'fields': ('created', 'updated')
         }),
     )
-
-
-# ----------------------------------------------------------------
-# admin register
-admin.site.register(models.GoalCategory, GoalCategoryAdmin)
-admin.site.register(models.Goal, GoalAdmin)
-admin.site.register(models.Comment, CommentAdmin)

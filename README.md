@@ -22,8 +22,24 @@ This is a simple application that allows you to manage your todo list (task mana
 Python v.3.11   
 Poetry v.1.4.1   
 Django v.4.1.7   
-Django REST Framework v.3.14.0
-## Server start
+Django REST Framework v.3.14.0   
+VK OAuth2.0   
+Docker
+## Local start  
+Create local .env file with the next data:  
+``` python
+SECRET_KEY='your django key'
+DATABASE_URL=postgres://postgres:postgres@db/todo_list
+DEBUG=True
+VK_ID='your vk id'
+VK_KEY='your vk secure key'
+```
+Run API, DB, Frontend and Migrations containers by:
+``` python
+docker-compose up --build
+```
+An application will run at http://localhost:80
+## Server start 
 Clone repository
 ``` python
 git clone https://github.com/MichaelRodionov/TODOList.git
@@ -45,6 +61,9 @@ PASSWORD # your host password
 # Docker
 DOCKERHUB_TOKEN  # your dockerhub token
 DOCKERHUB_USERNAME  # your dockerhub username
+# VK OAuth2.0
+VK_ID  # your VK application ID
+VK_KEY  # your VK application secure key
 ```
 Add remote to your GitHub repository by repository URL   
 Push code to your repository
@@ -54,4 +73,5 @@ git commit -m 'add project'  # initial commit
 git push  # push to repository
 ```
 ---
-Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml
+Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml   
+An application will run on your hostname
