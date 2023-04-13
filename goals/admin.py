@@ -46,7 +46,7 @@ class GoalAdmin(admin.ModelAdmin):
 @admin.register(models.Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('text', 'user', 'goal')
-    search_fields = ('text', 'user__name', 'goal__title')
+    search_fields = ('text', 'user__username', 'goal__title')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
