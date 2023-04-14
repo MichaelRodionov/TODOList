@@ -74,7 +74,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserDetailSerializer(read_only=True)
-    goal = GoalSerializer
+    goal = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.Comment

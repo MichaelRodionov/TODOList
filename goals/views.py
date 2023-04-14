@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, generics, filters
@@ -19,7 +20,6 @@ class CategoryCreateView(generics.CreateAPIView):
 
 class CategoryListView(generics.ListAPIView):
     """View to handle GET request to get list of category entities"""
-    model = models.GoalCategory
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.CategorySerializer
     pagination_class = LimitOffsetPagination
@@ -41,7 +41,6 @@ class CategoryListView(generics.ListAPIView):
 
 class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """View to handle GET, PUT, DELETE requests of definite category entity"""
-    model = models.GoalCategory
     serializer_class = serializers.CategorySerializer
     permission_classes: list = [permissions.IsAuthenticated]
 
@@ -60,13 +59,11 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Method to redefine DELETE request
         The entity is not deleted, the is_deleted flag is set to True
         """
-        entity.is_deleted = True
-        goals = models.Goal.objects.filter(user=self.request.user, category=entity)
-        for goal in goals:
-            goal.status = models.Goal.Status.archived
-            goal.save()
-        entity.save()
-        return entity
+        with transaction.atomic():
+            entity.is_deleted = True
+            entity.save(update_fields=('is_deleted',))
+            entity.goal_set.update(status=models.Goal.Status.archived)
+            return entity
 
 
 # ----------------------------------------------------------------
@@ -80,7 +77,6 @@ class GoalCreateView(generics.CreateAPIView):
 
 class GoalListView(generics.ListAPIView):
     """View to handle GET request to get list of goal entities"""
-    model = models.Goal
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.GoalSerializer
     pagination_class = LimitOffsetPagination
@@ -140,13 +136,14 @@ class CommentCreateView(generics.CreateAPIView):
 
 class CommentListView(generics.ListAPIView):
     """View to handle GET request to get list of comment entities"""
-    # model = models.Comment
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
     filter_backends: list = [
+        DjangoFilterBackend,
         filters.OrderingFilter,
     ]
+    filterset_fields: list = ['goal']
     ordering_fields: list = ['created', 'updated']
     ordering: list = ['-created']
 
@@ -155,16 +152,13 @@ class CommentListView(generics.ListAPIView):
         Method to redefine queryset for comment
         Filter owner and definite goal
         """
-        goal = self.request.query_params.get('goal')
-        return models.Comment.objects.filter(
-            user=self.request.user,
-            goal=goal
+        return models.Comment.objects.select_related('user').filter(
+            user_id=self.request.user.id
         )
 
 
 class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """View to handle GET, PUT, DELETE requests of definite comment entity"""
-    # model = models.Comment
     serializer_class = serializers.CommentSerializer
     permission_classes: list = [permissions.IsAuthenticated]
 
