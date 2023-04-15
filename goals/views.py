@@ -33,7 +33,7 @@ class CategoryListView(generics.ListAPIView):
 
     def get_queryset(self) -> QuerySet:
         """Method to redefine queryset for category"""
-        return models.GoalCategory.objects.filter(
+        return models.GoalCategory.objects.select_related('user').filter(
             user=self.request.user,
             is_deleted=False
         )
@@ -49,7 +49,7 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Method to redefine queryset for category
         Check owner and is_deleted flag
         """
-        return models.GoalCategory.objects.filter(
+        return models.GoalCategory.objects.select_related('user').filter(
             user=self.request.user,
             is_deleted=False
         )
@@ -95,8 +95,8 @@ class GoalListView(generics.ListAPIView):
         Method to redefine queryset for goal
         Filter owner and goal status
         """
-        return models.Goal.objects.filter(
-            user=self.request.user
+        return models.Goal.objects.select_related('user').filter(
+            user=self.request.user,
         ).exclude(status=models.Goal.Status.archived)
 
 
@@ -111,7 +111,7 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Method to redefine queryset for goal
         Filter owner and goal status
         """
-        return models.Goal.objects.filter(
+        return models.Goal.objects.select_related('user').filter(
             user=self.request.user,
         ).exclude(status=models.Goal.Status.archived)
 
@@ -153,7 +153,7 @@ class CommentListView(generics.ListAPIView):
         Filter owner and definite goal
         """
         return models.Comment.objects.select_related('user').filter(
-            user_id=self.request.user.id
+            user=self.request.user
         )
 
 
@@ -164,6 +164,6 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self) -> QuerySet:
         """Method to redefine queryset for comment"""
-        return models.Comment.objects.filter(
+        return models.Comment.objects.select_related('user').filter(
             user=self.request.user
         )
