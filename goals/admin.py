@@ -7,7 +7,7 @@ from goals import models
 # admin models
 @admin.register(models.Board)
 class BoardAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'is_deleted')
+    list_display = ('title', 'is_deleted')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
@@ -25,7 +25,7 @@ class BoardAdmin(admin.ModelAdmin):
 
 @admin.register(models.BoardParticipant)
 class BoardParticipantAdmin(admin.ModelAdmin):
-    list_display = ('board', 'user', 'is_deleted', 'role')
+    list_display = ('board', 'user', 'role')
     readonly_fields = ('created', 'updated')
 
     fieldsets = (
@@ -34,9 +34,6 @@ class BoardParticipantAdmin(admin.ModelAdmin):
         }),
         ('Dates', {
             'fields': ('created', 'updated')
-        }),
-        ('Status', {
-            'fields': ('is_deleted',)
         }),
     )
 
