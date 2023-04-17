@@ -39,6 +39,9 @@ class Board(DatesModelMixin):
         verbose_name = "Доска"
         verbose_name_plural = "Доски"
 
+    def __str__(self):
+        return self.title
+
 
 # ----------------------------------------------------------------
 # board participant model
@@ -70,6 +73,9 @@ class BoardParticipant(DatesModelMixin):
         unique_together = ("board", "user")
         verbose_name = "Участник"
         verbose_name_plural = "Участники"
+
+    def __str__(self):
+        return self.board
 
 
 # ----------------------------------------------------------------
