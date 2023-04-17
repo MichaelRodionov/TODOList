@@ -5,6 +5,42 @@ from goals import models
 
 # ----------------------------------------------------------------
 # admin models
+@admin.register(models.Board)
+class BoardAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'is_deleted')
+    readonly_fields = ('created', 'updated')
+
+    fieldsets = (
+        ('Info', {
+            'fields': ('title', 'user')
+        }),
+        ('Dates', {
+            'fields': ('created', 'updated')
+        }),
+        ('Status', {
+            'fields': ('is_deleted',)
+        }),
+    )
+
+
+@admin.register(models.BoardParticipant)
+class BoardParticipantAdmin(admin.ModelAdmin):
+    list_display = ('board', 'user', 'is_deleted', 'role')
+    readonly_fields = ('created', 'updated')
+
+    fieldsets = (
+        ('Info', {
+            'fields': ('board', 'user')
+        }),
+        ('Dates', {
+            'fields': ('created', 'updated')
+        }),
+        ('Status', {
+            'fields': ('is_deleted',)
+        }),
+    )
+
+
 @admin.register(models.GoalCategory)
 class GoalCategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_deleted')
