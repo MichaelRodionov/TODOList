@@ -15,4 +15,7 @@ urlpatterns = [
     path('goal_comment/create', views.CommentCreateView.as_view()),
     path('goal_comment/list', views.CommentListView.as_view()),
     path('goal_comment/<int:pk>', views.CommentRetrieveUpdateDestroyView.as_view()),
+    path('board/create', views.BoardCreateView.as_view()),
+    path('board/list', views.BoardListView.as_view()),
+    path('board/<int:pk>', views.BoardRetrieveUpdateDestroyView.as_view())
 ]

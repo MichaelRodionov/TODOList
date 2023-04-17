@@ -7,6 +7,50 @@ from rest_framework.pagination import LimitOffsetPagination
 from goals import models
 from goals import serializers
 from goals.filters import GoalDateFilter
+from goals.permissions import BoardPermissions
+
+
+# ----------------------------------------------------------------
+# board views
+class BoardCreateView(generics.CreateAPIView):
+    model = models.Board
+    permission_classes: list = [permissions.IsAuthenticated]
+    serializer_class = serializers.BoardCreateSerializer
+
+
+class BoardListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.BoardListSerializer
+    pagination_class = LimitOffsetPagination
+    ordering = ['title']
+
+    def get_queryset(self):
+        return models.Board.objects.filter(
+            participants__user=self.request.user,
+            is_deleted=False
+        )
+
+
+class BoardRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    model = models.Board
+    permission_classes = [permissions.IsAuthenticated, BoardPermissions]
+    serializer_class = serializers.BoardSerializer
+
+    def get_queryset(self):
+        return models.Board.objects.filter(
+            participants__user=self.request.user,
+            is_deleted=False
+        )
+
+    def perform_destroy(self, entity: models.Board):
+        with transaction.atomic():
+            entity.is_deleted = True
+            entity.save()
+            entity.categories.update(is_deleted=True)
+            models.Goal.objects.filter(category__board=entity).update(
+                status=models.Goal.Status.archived
+            )
+        return entity
 
 
 # ----------------------------------------------------------------
