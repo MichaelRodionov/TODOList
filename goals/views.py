@@ -1,8 +1,10 @@
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, generics, filters
+from rest_framework import permissions, generics, filters, status
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
 from goals import models
 from goals import serializers
@@ -42,6 +44,12 @@ class BoardRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             is_deleted=False
         )
 
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except IntegrityError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
     def perform_destroy(self, entity: models.Board):
         with transaction.atomic():
             entity.is_deleted = True
@@ -68,17 +76,20 @@ class CategoryListView(generics.ListAPIView):
     serializer_class = serializers.CategorySerializer
     pagination_class = LimitOffsetPagination
     filter_backends: list = [
+        DjangoFilterBackend,
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
+    filterset_fields = ['board']
     ordering_fields: list = ['title', 'created']
     ordering: list = ['title']
-    search_fields: list = ['title']
+    search_fields: list = ['title', 'board__title']
 
     def get_queryset(self) -> QuerySet:
         """Method to redefine queryset for category"""
-        return models.GoalCategory.objects.select_related('user').filter(
-            user=self.request.user,
+        return models.GoalCategory.objects.filter(
+            board__participants__user=self.request.user,
+            board__is_deleted=False,
             is_deleted=False
         )
 
@@ -93,21 +104,33 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Method to redefine queryset for category
         Check owner and is_deleted flag
         """
-        return models.GoalCategory.objects.select_related('user').filter(
-            user=self.request.user,
+        return models.GoalCategory.objects.filter(
+            board__participants__user=self.request.user,
+            board__is_deleted=False,
             is_deleted=False
         )
 
-    def perform_destroy(self, entity: models.GoalCategory) -> models.GoalCategory:
+    def perform_destroy(self, entity: models.GoalCategory) -> models.GoalCategory | Response:
         """
         Method to redefine DELETE request
-        The entity is not deleted, the is_deleted flag is set to True
+        Call serializers method perform destroy to check users role
         """
-        with transaction.atomic():
-            entity.is_deleted = True
-            entity.save(update_fields=('is_deleted',))
-            entity.goal_set.update(status=models.Goal.Status.archived)
-            return entity
+        try:
+            self.serializer_class().check_role(entity, current_user=self.request.user)
+            with transaction.atomic():
+                entity.is_deleted = True
+                entity.save(update_fields=('is_deleted',))
+                entity.goal_set.update(status=models.Goal.Status.archived)
+        except ValidationError:
+            return Response(
+                {'error': 'You are allowed only to read, not to delete'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return Response({'success': 'Category deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        entity: models.GoalCategory = self.get_object()
+        return self.perform_destroy(entity)
 
 
 # ----------------------------------------------------------------
@@ -129,6 +152,7 @@ class GoalListView(generics.ListAPIView):
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
+    filterset_fields = ['category__board']
     filterset_class = GoalDateFilter
     ordering_fields: list = ['priority', 'due_date']
     ordering: list = ['title']
@@ -139,8 +163,10 @@ class GoalListView(generics.ListAPIView):
         Method to redefine queryset for goal
         Filter owner and goal status
         """
-        return models.Goal.objects.select_related('user').filter(
-            user=self.request.user,
+        return models.Goal.objects.filter(
+            category__board__participants__user=self.request.user,
+            category__board__is_deleted=False,
+            category__is_deleted=False
         ).exclude(status=models.Goal.Status.archived)
 
 
@@ -155,18 +181,32 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         Method to redefine queryset for goal
         Filter owner and goal status
         """
-        return models.Goal.objects.select_related('user').filter(
-            user=self.request.user,
+        return models.Goal.objects.filter(
+            category__board__participants__user=self.request.user,
+            category__board__is_deleted=False,
+            category__is_deleted=False
         ).exclude(status=models.Goal.Status.archived)
 
-    def perform_destroy(self, entity: models.Goal) -> models.Goal:
+    def perform_destroy(self, entity: models.Goal) -> models.Goal| Response:
         """
         Method to redefine DELETE request
-        The entity is not deleted, status field is set to 'archived'
+        Call serializers method perform destroy to check users role
         """
-        entity.status = models.Goal.Status.archived
-        entity.save()
-        return entity
+        try:
+            self.serializer_class().check_role(entity, current_user=self.request.user)
+            with transaction.atomic():
+                entity.status = models.Goal.Status.archived
+                entity.save()
+        except ValidationError:
+            return Response(
+                {'error': 'You are allowed only to read, not to delete'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return Response({'success': 'Category deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+    def destroy(self, request, *args, **kwargs):
+        entity: models.Goal = self.get_object()
+        return self.perform_destroy(entity)
 
 
 # ----------------------------------------------------------------

@@ -49,3 +49,10 @@ services:
         condition: service_started
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  postgres_adminer:
+    container_name: postgres_adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"

@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 from rest_framework import serializers
 
@@ -63,20 +63,22 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("id", "created", "updated")
 
-    def update(self, entity: models.Board, validated_data):
+    def update(self, entity: models.Board, validated_data: dict) -> models.Board:
         board_owner = validated_data.pop('user')
-        elders: QuerySet = entity.participants.exclude(user=board_owner)
+        elders: QuerySet = entity.participants.exclude(user=board_owner).select_related('user')
         newbies: dict = {user.get('user').id: user for user in validated_data.pop('participants')}
         with transaction.atomic():
-            for older in elders:
-                if older.user_id not in newbies:
-                    older.delete()
+            for old in elders:
+                if old.user_id not in newbies:
+                    old.delete()
                 else:
-                    if older.role != newbies[older.user_id]['role']:
-                        older.role = newbies[older.user_id]['role']
-                        older.save()
-                    newbies.pop(older.user_id)
+                    if old.role != newbies[old.user_id]['role']:
+                        old.role = newbies[old.user_id]['role']
+                        old.save()
+                    newbies.pop(old.user_id)
             for newbie in newbies.values():
+                if newbie.get('user') == board_owner:
+                    raise IntegrityError('You cant add yourself as a participant')
                 models.BoardParticipant.objects.create(
                     board=entity,
                     user=newbie.get('user'),
@@ -91,6 +93,24 @@ class BoardSerializer(serializers.ModelSerializer):
 # category serializers
 class CategoryCreateSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    board = serializers.PrimaryKeyRelatedField(
+        queryset=models.Board.objects.all()
+    )
+
+    def validate_board(self, instance: models.Board) -> models.Board:
+        """Method to validate category instance"""
+        current_user = self.context.get('request').user
+        if instance.is_deleted:
+            raise serializers.ValidationError('You can not add category on deleted board')
+        board_participant = models.BoardParticipant.objects.filter(
+            board=instance,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to edit')
+        return instance
 
     class Meta:
         model = models.GoalCategory
@@ -100,6 +120,34 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(CategoryCreateSerializer):
     user = UserDetailSerializer(read_only=True)
+    board = serializers.PrimaryKeyRelatedField(
+        queryset=models.Board.objects.all()
+    )
+
+    def validate_board(self, entity: models.Board) -> models.Board:
+        """Method to validate category instance"""
+        current_user = self.context.get('request').user
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to edit')
+        return entity
+
+    @staticmethod
+    def check_role(entity: models.GoalCategory, current_user) -> bool:
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.board,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to delete')
+        return True
 
 
 # ----------------------------------------------------------------
@@ -121,18 +169,50 @@ class GoalCreateSerializer(GoalDefaultSerializer):
         queryset=models.GoalCategory.objects.all()
     )
 
-    def validate_category(self, instance: models.GoalCategory) -> models.GoalCategory:
+    def validate_category(self, entity: models.GoalCategory) -> models.GoalCategory:
         """Method to validate category instance"""
-        if instance.is_deleted:
+        current_user = self.context.get('request').user
+        if entity.is_deleted:
             raise serializers.ValidationError('You can not add goal in deleted category')
-        if instance.user != self.context.get('request').user:
-            raise serializers.ValidationError('Not your own category')
-        return instance
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.board,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to edit')
+        return entity
 
 
 class GoalSerializer(GoalDefaultSerializer):
     user = UserDetailSerializer(read_only=True)
     category = CategorySerializer
+
+    def validate_category(self, entity: models.GoalCategory) -> models.GoalCategory:
+        """Method to validate category instance"""
+        current_user = self.context.get('request').user
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.board,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to edit')
+        return entity
+
+    @staticmethod
+    def check_role(entity: models.Goal, current_user) -> bool:
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.category.board,
+            user=current_user
+        ).first()
+        if not board_participant:
+            raise serializers.ValidationError('You are not a participant of this board')
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to delete')
+        return True
 
 
 # ----------------------------------------------------------------
