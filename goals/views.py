@@ -187,7 +187,7 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             category__is_deleted=False
         ).exclude(status=models.Goal.Status.archived)
 
-    def perform_destroy(self, entity: models.Goal) -> models.Goal| Response:
+    def perform_destroy(self, entity: models.Goal) -> models.Goal | Response:
         """
         Method to redefine DELETE request
         Call serializers method perform destroy to check users role
