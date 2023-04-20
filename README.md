@@ -74,4 +74,7 @@ git push  # push to repository
 ```
 ---
 Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml   
-An application will run on your hostname
+An application will run on your hostname   
+## Database management   
+A special postgres_adminer container has been launched for convenient database management and monitoring.  
+By going to hostname:8080 you can send SQL queries, view tables, etc.
