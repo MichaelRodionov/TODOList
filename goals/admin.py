@@ -27,6 +27,7 @@ class BoardAdmin(admin.ModelAdmin):
 class BoardParticipantAdmin(admin.ModelAdmin):
     list_display = ('board', 'user', 'role')
     readonly_fields = ('created', 'updated')
+    list_filter = ("role",)
 
     fieldsets = (
         ('Info', {

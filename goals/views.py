@@ -15,42 +15,51 @@ from goals.permissions import BoardPermissions
 # ----------------------------------------------------------------
 # board views
 class BoardCreateView(generics.CreateAPIView):
+    """View to handle POST request to create board entity"""
     model = models.Board
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.BoardCreateSerializer
 
 
 class BoardListView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    """View to handle GET request to get list of board entities"""
+    permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = serializers.BoardListSerializer
     pagination_class = LimitOffsetPagination
-    ordering = ['title']
+    ordering: list = ['title']
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
+        """Method to redefine queryset for board"""
         return models.Board.objects.filter(
             participants__user=self.request.user,
             is_deleted=False
+        ).prefetch_related(
+            'participants__user'
         )
 
 
 class BoardRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    model = models.Board
-    permission_classes = [permissions.IsAuthenticated, BoardPermissions]
+    """View to handle GET, PUT, DELETE requests of definite board entity"""
+    permission_classes: list = [permissions.IsAuthenticated, BoardPermissions]
     serializer_class = serializers.BoardSerializer
 
     def get_queryset(self):
         return models.Board.objects.filter(
             participants__user=self.request.user,
             is_deleted=False
+        ).prefetch_related(
+            'participants__user'
         )
 
     def update(self, request, *args, **kwargs):
+        """Method to redefine PUT request"""
         try:
             return super().update(request, *args, **kwargs)
         except IntegrityError as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
     def perform_destroy(self, entity: models.Board):
+        """Method to redefine DELETE logic"""
         with transaction.atomic():
             entity.is_deleted = True
             entity.save()
@@ -80,7 +89,7 @@ class CategoryListView(generics.ListAPIView):
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_fields = ['board']
+    filterset_fields: list = ['board']
     ordering_fields: list = ['title', 'created']
     ordering: list = ['title']
     search_fields: list = ['title', 'board__title']
@@ -91,6 +100,8 @@ class CategoryListView(generics.ListAPIView):
             board__participants__user=self.request.user,
             board__is_deleted=False,
             is_deleted=False
+        ).prefetch_related(
+            'board__participants__user'
         )
 
 
@@ -102,15 +113,16 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self) -> QuerySet:
         """
         Method to redefine queryset for category
-        Check owner and is_deleted flag
         """
         return models.GoalCategory.objects.filter(
             board__participants__user=self.request.user,
             board__is_deleted=False,
             is_deleted=False
+        ).prefetch_related(
+            'board__participants__user'
         )
 
-    def perform_destroy(self, entity: models.GoalCategory) -> models.GoalCategory | Response:
+    def perform_destroy(self, entity: models.GoalCategory) -> Response:
         """
         Method to redefine DELETE request
         Call serializers method perform destroy to check users role
@@ -128,7 +140,8 @@ class CategoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             )
         return Response({'success': 'Category deleted'}, status=status.HTTP_204_NO_CONTENT)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
+        """Redefined method to call redefined perform_destroy()"""
         entity: models.GoalCategory = self.get_object()
         return self.perform_destroy(entity)
 
@@ -152,22 +165,21 @@ class GoalListView(generics.ListAPIView):
         filters.OrderingFilter,
         filters.SearchFilter,
     ]
-    filterset_fields = ['category__board']
+    filterset_fields: list = ['category__board', 'category']
     filterset_class = GoalDateFilter
     ordering_fields: list = ['priority', 'due_date']
     ordering: list = ['title']
     search_fields: list = ['title']
 
     def get_queryset(self) -> QuerySet:
-        """
-        Method to redefine queryset for goal
-        Filter owner and goal status
-        """
+        """Method to redefine queryset for goal"""
         return models.Goal.objects.filter(
             category__board__participants__user=self.request.user,
             category__board__is_deleted=False,
             category__is_deleted=False
-        ).exclude(status=models.Goal.Status.archived)
+        ).exclude(status=models.Goal.Status.archived).prefetch_related(
+            'category__board__participants__user'
+        )
 
 
 class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -177,17 +189,16 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes: list = [permissions.IsAuthenticated]
 
     def get_queryset(self) -> QuerySet:
-        """
-        Method to redefine queryset for goal
-        Filter owner and goal status
-        """
+        """Method to redefine queryset for goal"""
         return models.Goal.objects.filter(
             category__board__participants__user=self.request.user,
             category__board__is_deleted=False,
             category__is_deleted=False
-        ).exclude(status=models.Goal.Status.archived)
+        ).exclude(status=models.Goal.Status.archived).prefetch_related(
+            'category__board__participants__user'
+        )
 
-    def perform_destroy(self, entity: models.Goal) -> models.Goal | Response:
+    def perform_destroy(self, entity: models.Goal) -> Response:
         """
         Method to redefine DELETE request
         Call serializers method perform destroy to check users role
@@ -204,7 +215,8 @@ class GoalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             )
         return Response({'success': 'Category deleted'}, status=status.HTTP_204_NO_CONTENT)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
+        """Redefined method to call redefined perform_destroy()"""
         entity: models.Goal = self.get_object()
         return self.perform_destroy(entity)
 
@@ -227,17 +239,18 @@ class CommentListView(generics.ListAPIView):
         DjangoFilterBackend,
         filters.OrderingFilter,
     ]
-    filterset_fields: list = ['goal']
+    filterset_fields: list = ['goal__category__board', 'goal']
     ordering_fields: list = ['created', 'updated']
     ordering: list = ['-created']
 
     def get_queryset(self) -> QuerySet:
-        """
-        Method to redefine queryset for comment
-        Filter owner and definite goal
-        """
-        return models.Comment.objects.select_related('user').filter(
-            user=self.request.user
+        """Method to redefine queryset for comment"""
+        return models.Comment.objects.filter(
+            goal__category__board__participants__user=self.request.user,
+            goal__category__board__is_deleted=False,
+            goal__category__is_deleted=False,
+        ).exclude(goal__status=models.Goal.Status.archived).prefetch_related(
+            'goal__category__board__participants__user'
         )
 
 
@@ -248,6 +261,10 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self) -> QuerySet:
         """Method to redefine queryset for comment"""
-        return models.Comment.objects.select_related('user').filter(
-            user=self.request.user
+        return models.Comment.objects.filter(
+            goal__category__board__participants__user=self.request.user,
+            goal__category__board__is_deleted=False,
+            goal__category__is_deleted=False,
+        ).exclude(goal__status=models.Goal.Status.archived).prefetch_related(
+            'goal__category__board__participants__user'
         )

@@ -59,5 +59,15 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - django_static:/usr/share/nginx/html/static
 
+  postgres_adminer:
+    container_name: postgres_adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   django_static:

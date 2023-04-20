@@ -8,26 +8,7 @@ from goals import models
 
 
 # ----------------------------------------------------------------
-# board serializers
-class BoardCreateSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    def create(self, validated_data):
-        user = validated_data.pop("user")
-        board = models.Board.objects.create(**validated_data)
-        models.BoardParticipant.objects.create(
-            user=user,
-            board=board,
-            role=models.BoardParticipant.Role.owner
-        )
-        return board
-
-    class Meta:
-        model = models.Board
-        read_only_fields = ("id", "created", "updated")
-        fields = "__all__"
-
-
+# board participants serializers
 class BoardListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Board
@@ -48,6 +29,27 @@ class BoardParticipantSerializer(serializers.ModelSerializer):
         model = models.BoardParticipant
         fields = "__all__"
         read_only_fields = ("id", "created", "updated", "board")
+
+
+# ----------------------------------------------------------------
+# board serializers
+class BoardCreateSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def create(self, validated_data):
+        user = validated_data.pop("user")
+        board = models.Board.objects.create(**validated_data)
+        models.BoardParticipant.objects.create(
+            user=user,
+            board=board,
+            role=models.BoardParticipant.Role.owner
+        )
+        return board
+
+    class Meta:
+        model = models.Board
+        read_only_fields = ("id", "created", "updated")
+        fields = "__all__"
 
 
 class BoardSerializer(serializers.ModelSerializer):
@@ -91,39 +93,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
 # ----------------------------------------------------------------
 # category serializers
-class CategoryCreateSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    board = serializers.PrimaryKeyRelatedField(
-        queryset=models.Board.objects.all()
-    )
-
-    def validate_board(self, instance: models.Board) -> models.Board:
-        """Method to validate category instance"""
-        current_user = self.context.get('request').user
-        if instance.is_deleted:
-            raise serializers.ValidationError('You can not add category on deleted board')
-        board_participant = models.BoardParticipant.objects.filter(
-            board=instance,
-            user=current_user
-        ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
-        if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to edit')
-        return instance
-
-    class Meta:
-        model = models.GoalCategory
-        fields = '__all__'
-        read_only_fields: tuple = ('id', 'created', 'updated', 'user')
-
-
-class CategorySerializer(CategoryCreateSerializer):
-    user = UserDetailSerializer(read_only=True)
-    board = serializers.PrimaryKeyRelatedField(
-        queryset=models.Board.objects.all()
-    )
-
+class CategoryBaseSerializer(serializers.ModelSerializer):
     def validate_board(self, entity: models.Board) -> models.Board:
         """Method to validate category instance"""
         current_user = self.context.get('request').user
@@ -131,11 +101,28 @@ class CategorySerializer(CategoryCreateSerializer):
             board=entity,
             user=current_user
         ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
         if board_participant.role == models.BoardParticipant.Role.reader:
             raise serializers.ValidationError('You are allowed only to read, not to edit')
         return entity
+
+
+class CategoryCreateSerializer(CategoryBaseSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    board = serializers.PrimaryKeyRelatedField(
+        queryset=models.Board.objects.all()
+    )
+
+    class Meta:
+        model = models.GoalCategory
+        fields: str = '__all__'
+        read_only_fields: tuple = ('id', 'created', 'updated', 'user')
+
+
+class CategorySerializer(CategoryBaseSerializer):
+    user = UserDetailSerializer(read_only=True)
+    board = serializers.PrimaryKeyRelatedField(
+        queryset=models.Board.objects.all()
+    )
 
     @staticmethod
     def check_role(entity: models.GoalCategory, current_user) -> bool:
@@ -143,17 +130,30 @@ class CategorySerializer(CategoryCreateSerializer):
             board=entity.board,
             user=current_user
         ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
         if board_participant.role == models.BoardParticipant.Role.reader:
             raise serializers.ValidationError('You are allowed only to read, not to delete')
         return True
 
+    class Meta:
+        model = models.GoalCategory
+        fields: str = "__all__"
+        read_only_fields: tuple = ("id", "created", "updated", "user", "board")
+
 
 # ----------------------------------------------------------------
 # goal serializers
-class GoalDefaultSerializer(serializers.ModelSerializer):
-    """Default serializer with Meta"""
+class GoalBaseSerializer(serializers.ModelSerializer):
+    """Base serializer for goal entity"""
+    def validate_category(self, entity: models.GoalCategory) -> models.GoalCategory:
+        """Method to validate category entity"""
+        current_user = self.context.get('request').user
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.board,
+            user=current_user
+        ).first()
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError('You are allowed only to read, not to edit')
+        return entity
 
     class Meta:
         model = models.Goal
@@ -161,7 +161,7 @@ class GoalDefaultSerializer(serializers.ModelSerializer):
         read_only_fields: tuple = ('id', 'created', 'updated', 'user')
 
 
-class GoalCreateSerializer(GoalDefaultSerializer):
+class GoalCreateSerializer(GoalBaseSerializer):
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
@@ -169,38 +169,10 @@ class GoalCreateSerializer(GoalDefaultSerializer):
         queryset=models.GoalCategory.objects.all()
     )
 
-    def validate_category(self, entity: models.GoalCategory) -> models.GoalCategory:
-        """Method to validate category instance"""
-        current_user = self.context.get('request').user
-        if entity.is_deleted:
-            raise serializers.ValidationError('You can not add goal in deleted category')
-        board_participant = models.BoardParticipant.objects.filter(
-            board=entity.board,
-            user=current_user
-        ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
-        if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to edit')
-        return entity
 
-
-class GoalSerializer(GoalDefaultSerializer):
+class GoalSerializer(GoalBaseSerializer):
     user = UserDetailSerializer(read_only=True)
     category = CategorySerializer
-
-    def validate_category(self, entity: models.GoalCategory) -> models.GoalCategory:
-        """Method to validate category instance"""
-        current_user = self.context.get('request').user
-        board_participant = models.BoardParticipant.objects.filter(
-            board=entity.board,
-            user=current_user
-        ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
-        if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to edit')
-        return entity
 
     @staticmethod
     def check_role(entity: models.Goal, current_user) -> bool:
@@ -208,39 +180,47 @@ class GoalSerializer(GoalDefaultSerializer):
             board=entity.category.board,
             user=current_user
         ).first()
-        if not board_participant:
-            raise serializers.ValidationError('You are not a participant of this board')
         if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to delete')
+            raise serializers.ValidationError(
+                'Your role is reader. You are allowed only to read'
+            )
         return True
 
 
 # ----------------------------------------------------------------
 # comment serializers
-class CommentCreateSerializer(serializers.ModelSerializer):
+class CommentBaseSerializer(serializers.ModelSerializer):
+    """Base serializer for comment entity"""
+    def validate_goal(self, entity: models.Goal) -> models.Goal:
+        """Method to validate goal entity"""
+        current_user = self.context.get('request').user
+        board_participant = models.BoardParticipant.objects.filter(
+            board=entity.category.board,
+            user=current_user
+        ).first()
+        if board_participant.role == models.BoardParticipant.Role.reader:
+            raise serializers.ValidationError(
+                'Your role is reader. You are allowed only to read'
+            )
+        return entity
+
+
+class CommentCreateSerializer(CommentBaseSerializer):
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
 
-    def validate_goal(self, instance: models.Goal) -> models.Goal:
-        """Method to validate goal instance"""
-        if instance.status == models.Goal.Status.archived:
-            raise serializers.ValidationError('You can not add comment in archived goal')
-        if instance.user != self.context.get('request').user:
-            raise serializers.ValidationError('Not your own goal')
-        return instance
-
     class Meta:
         model = models.Comment
-        fields = '__all__'
+        fields: str = '__all__'
         read_only_fields: tuple = ('id', 'created', 'updated', 'user')
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(CommentBaseSerializer):
     user = UserDetailSerializer(read_only=True)
     goal = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.Comment
-        fields = '__all__'
+        fields: str = '__all__'
         read_only_fields: tuple = ('id', 'created', 'updated', 'user', 'goal')
