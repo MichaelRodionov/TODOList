@@ -10,12 +10,33 @@ class BoardAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_deleted')
     readonly_fields = ('created', 'updated')
 
+    fieldsets = (
+        ('Info', {
+            'fields': ('title',)
+        }),
+        ('Dates', {
+            'fields': ('created', 'updated')
+        }),
+        ('Status', {
+            'fields': ('is_deleted',)
+        }),
+    )
+
 
 @admin.register(models.BoardParticipant)
 class BoardParticipantAdmin(admin.ModelAdmin):
     list_display = ('board', 'user', 'role')
     readonly_fields = ('created', 'updated')
     list_filter = ("role",)
+
+    fieldsets = (
+        ('Info', {
+            'fields': ('board', 'user')
+        }),
+        ('Dates', {
+            'fields': ('created', 'updated')
+        }),
+    )
 
 
 @admin.register(models.GoalCategory)

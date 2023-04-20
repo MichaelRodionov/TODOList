@@ -35,12 +35,12 @@ class Board(DatesModelMixin):
         default=False
     )
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = "Доска"
         verbose_name_plural = "Доски"
-
-    def __str__(self):
-        return self.title
 
 
 # ----------------------------------------------------------------
@@ -69,13 +69,13 @@ class BoardParticipant(DatesModelMixin):
         default=Role.owner
     )
 
+    def __str__(self):
+        return self.user.username
+
     class Meta:
         unique_together = ("board", "user")
         verbose_name = "Участник"
         verbose_name_plural = "Участники"
-
-    def __str__(self):
-        return self.board
 
 
 # ----------------------------------------------------------------
