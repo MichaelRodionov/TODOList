@@ -13,7 +13,7 @@ from goals.models.board import BoardParticipant, Board
 class BoardParticipantSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(
         required=True,
-        choices=BoardParticipant.Role.choices
+        choices=BoardParticipant.Role.choices[1:]
     )
     user = serializers.SlugRelatedField(
         slug_field="username",
