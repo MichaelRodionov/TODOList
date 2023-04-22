@@ -1,6 +1,7 @@
 from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from core.models import User
 from core.serializers import UserDetailSerializer
@@ -108,7 +109,7 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
             user=current_user
         ).first()
         if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to create')
+            raise PermissionDenied('You are allowed only to read, not to create')
         return entity
 
     class Meta:
@@ -147,7 +148,7 @@ class GoalCreateSerializer(serializers.ModelSerializer):
             user=current_user
         ).first()
         if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError('You are allowed only to read, not to create')
+            raise PermissionDenied('You are allowed only to read, not to create')
         return entity
 
     class Meta:
@@ -181,9 +182,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             user=current_user
         ).first()
         if board_participant.role == models.BoardParticipant.Role.reader:
-            raise serializers.ValidationError(
-                'Your role is reader. You are allowed only to read, not to create'
-            )
+            raise PermissionDenied('You are allowed only to read, not to create')
         return entity
 
     class Meta:
