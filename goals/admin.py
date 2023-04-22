@@ -1,11 +1,14 @@
 from django.contrib import admin
 
-from goals import models
+from goals.models.board import Board, BoardParticipant
+from goals.models.category import GoalCategory
+from goals.models.comment import Comment
+from goals.models.goal import Goal
 
 
 # ----------------------------------------------------------------
 # admin models
-@admin.register(models.Board)
+@admin.register(Board)
 class BoardAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_deleted')
     readonly_fields = ('created', 'updated')
@@ -23,7 +26,7 @@ class BoardAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.BoardParticipant)
+@admin.register(BoardParticipant)
 class BoardParticipantAdmin(admin.ModelAdmin):
     list_display = ('board', 'user', 'role')
     readonly_fields = ('created', 'updated')
@@ -39,7 +42,7 @@ class BoardParticipantAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.GoalCategory)
+@admin.register(GoalCategory)
 class GoalCategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'is_deleted')
     search_fields = ('title', 'user__username')
@@ -58,7 +61,7 @@ class GoalCategoryAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.Goal)
+@admin.register(Goal)
 class GoalAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'category', 'priority', 'status')
     search_fields = ('title', 'user__username', 'category__title')
@@ -77,7 +80,7 @@ class GoalAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.Comment)
+@admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('text', 'user', 'goal')
     search_fields = ('text', 'user__username', 'goal__title')
