@@ -40,7 +40,7 @@ class Command(BaseCommand):
                     else:
                         tg_client.send_message(
                             chat_id=item.message.chat.id,
-                            text=f'Пользуйтесь доступным набором команд'
+                            text='Пользуйтесь доступным набором команд'
                         )
 
     def get_tguser(self, tguser_id) -> Optional[TgUser]:

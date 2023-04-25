@@ -30,4 +30,3 @@ class TgUserUpdateView(generics.GenericAPIView):
         tg_user.save()
 
         return Response('Success verification', status=status.HTTP_200_OK)
-
