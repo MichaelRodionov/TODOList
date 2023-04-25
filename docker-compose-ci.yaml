@@ -60,7 +60,7 @@ services:
       - django_static:/usr/share/nginx/html/static
 
   bot:
-    build: .
+    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
     container_name: tg_bot
     env_file:
       - .env
