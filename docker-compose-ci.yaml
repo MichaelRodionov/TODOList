@@ -67,10 +67,10 @@ services:
     command: >
       sh -c "./manage.py runbot"
     depends_on:
-      migrations:
-        condition: service_completed_successfully
       db:
         condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
 
   postgres_adminer:
     container_name: postgres_adminer
