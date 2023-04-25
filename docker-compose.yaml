@@ -40,7 +40,7 @@ services:
         condition: service_completed_successfully
 
   front:
-    image: sermalenk/skypro-front:lesson-37
+    image: sermalenk/skypro-front:lesson-38
     container_name: front
     ports:
       - "80:80"
@@ -49,6 +49,19 @@ services:
         condition: service_started
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  bot:
+    build: .
+    container_name: tg_bot
+    env_file:
+      - .env
+    command: >
+      sh -c "./manage.py runbot"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
 
   postgres_adminer:
     container_name: postgres_adminer
