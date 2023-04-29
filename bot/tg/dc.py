@@ -76,5 +76,7 @@ class SendMessageResponse:
         unknown = EXCLUDE
 
 
+# ----------------------------------------------------------------
+# create schemas entities
 GetUpdatesResponseSchema = marshmallow_dataclass.class_schema(GetUpdatesResponse)
 SendMessageResponseSchema = marshmallow_dataclass.class_schema(SendMessageResponse)

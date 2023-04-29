@@ -17,7 +17,8 @@ class TgUser(models.Model):
     user = models.ForeignKey(
         'core.User',
         on_delete=models.PROTECT,
-        null=True
+        null=True,
+        verbose_name='Пользователь приложения'
     )
     verification_code = models.CharField(
         verbose_name='Код верификации',
