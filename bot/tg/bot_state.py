@@ -20,18 +20,18 @@ class BotState1(BaseState):
         if item.message.text == '/start':
             tg_user, created = self._check_user(item.message)
             if created:
-                self.send_message(state='success', item=item)
+                self._send_message(state='success', item=item)
                 self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
                 self.botSession.doSomething(**kwargs)
             elif tg_user.status == TgUser.Status.verified:
-                self.send_message(state='state1-state3', item=item)
+                self._send_message(state='state1-state3', item=item)
                 self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
             else:
-                self.send_message(state='state1-state2', item=item)
+                self._send_message(state='state1-state2', item=item)
                 self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
                 self.botSession.doSomething(**kwargs)
         else:
-            self.send_message(state='error', item=item)
+            self._send_message(state='error', item=item)
 
     @staticmethod
     def _check_user(message) -> Tuple[TgUser, bool]:
@@ -45,7 +45,7 @@ class BotState1(BaseState):
         )
         return tg_user, created
 
-    def message_data(self, **kwargs) -> str:
+    def _message_data(self, **kwargs) -> str:
         """Method to define message data"""
         message: dict[str, str] = {
             'success': 'Приветствую в телеграм боте TODOList! Ожидайте ваш код верификации!',
@@ -55,9 +55,9 @@ class BotState1(BaseState):
         }
         return message.get(kwargs.get('state'))
 
-    def send_message(self, **kwargs) -> None:
+    def _send_message(self, **kwargs) -> None:
         """Method to send a message by client entity"""
-        text: str = self.message_data(state=kwargs.get('state'))
+        text: str = self._message_data(state=kwargs.get('state'))
         self.client.send_message(chat_id=kwargs.get('item').message.chat.id, text=text)
 
 
@@ -74,26 +74,26 @@ class BotState2(BaseState):
             code: str = get_random_string(length=10)
             if item.message.text == '/check_verification':
                 if tg_user and tg_user.status == TgUser.Status.verified:
-                    self.send_message(state='verified', item=item)
-                    self.send_message(state='state2-state3', item=item)
+                    self._send_message(state='verified', item=item)
+                    self._send_message(state='state2-state3', item=item)
                     self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
                 else:
-                    self.send_message(state='nonverified', item=item, code=code)
-                    self.update_user(tg_user, code)
+                    self._send_message(state='nonverified', item=item, code=code)
+                    self._update_user(tg_user, code)
             elif tg_user and tg_user.status != TgUser.Status.verified:
-                self.send_message(state='send_code', item=item, code=code)
-                self.update_user(tg_user, code)
+                self._send_message(state='send_code', item=item, code=code)
+                self._update_user(tg_user, code)
         except TgUser.DoesNotExist:
-            self.send_message(state='start', item=item)
+            self._send_message(state='start', item=item)
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
 
     @staticmethod
-    def update_user(tg_user: TgUser, code: str) -> None:
+    def _update_user(tg_user: TgUser, code: str) -> None:
         """Method to write verification code in users entity"""
         tg_user.verification_code = code
         tg_user.save(update_fields=('verification_code',))
 
-    def message_data(self, **kwargs) -> str:
+    def _message_data(self, **kwargs) -> str:
         """Method to define message data"""
         message: dict[str, str] = {
             'verified': 'Вы успешно верифицировали бота',
@@ -106,9 +106,9 @@ class BotState2(BaseState):
         }
         return message.get(kwargs.get('state'))
 
-    def send_message(self, **kwargs) -> None:
+    def _send_message(self, **kwargs) -> None:
         """Method to send a message by client entity"""
-        text: str = self.message_data(state=kwargs.get('state'), code=kwargs.get('code'))
+        text: str = self._message_data(state=kwargs.get('state'), code=kwargs.get('code'))
         self.client.send_message(chat_id=kwargs.get('item').message.chat.id, text=text)
 
 
@@ -124,29 +124,29 @@ class BotState3(BaseState):
             tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
             if tg_user and tg_user.status == TgUser.Status.verified:
                 if item.message.text == '/goals':
-                    goals: str | None = self.get_goals(tg_user)
+                    goals: str | None = self._get_goals(tg_user)
                     if goals:
-                        self.send_message(state='goals', item=item, goals=goals)
+                        self._send_message(state='goals', item=item, goals=goals)
                     else:
-                        self.send_message(state='empty_goals', item=item)
+                        self._send_message(state='empty_goals', item=item)
                 elif item.message.text == '/create':
-                    categories: str | None = self.get_categories(tg_user)
+                    categories: str | None = self._get_categories(tg_user)
                     if categories:
-                        self.send_message(state='categories', item=item, categories=categories)
+                        self._send_message(state='categories', item=item, categories=categories)
                         self.botSession.setState(BotState4(client=self.client, botSession=self.botSession))
                     else:
-                        self.send_message(state='empty_cats', item=item)
+                        self._send_message(state='empty_cats', item=item)
                 else:
-                    self.send_message(state='error', item=item)
+                    self._send_message(state='error', item=item)
             else:
                 self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
-                self.send_message(state='state3-state2', item=item)
+                self._send_message(state='state3-state2', item=item)
         except TgUser.DoesNotExist:
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
-            self.send_message(state='state3-state1', item=item)
+            self._send_message(state='state3-state1', item=item)
 
     @staticmethod
-    def get_goals(tg_user) -> str | None:
+    def _get_goals(tg_user) -> str | None:
         """Method to get all users goals. Return string if goals exist, else None"""
         goals: QuerySet[Goal] = Goal.objects.select_related('category').filter(
             category__board__participants__user=tg_user.user,
@@ -159,7 +159,7 @@ class BotState3(BaseState):
             return None
 
     @staticmethod
-    def get_categories(tg_user) -> str | None:
+    def _get_categories(tg_user) -> str | None:
         """Method to get all users categories. Return string if categories exist, else None"""
         categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
             board__participants__user=tg_user.user,
@@ -171,7 +171,7 @@ class BotState3(BaseState):
         else:
             return None
 
-    def message_data(self, **kwargs) -> str:
+    def _message_data(self, **kwargs) -> str:
         """Method to define message data"""
         message: dict[str, str] = {
             'empty_goals': 'Вы еще не создавали цели',
@@ -186,9 +186,9 @@ class BotState3(BaseState):
         }
         return message.get(kwargs.get('state'))
 
-    def send_message(self, **kwargs) -> None:
+    def _send_message(self, **kwargs) -> None:
         """Method to send a message by client entity"""
-        text: str = self.message_data(
+        text: str = self._message_data(
             state=kwargs.get('state'),
             goals=kwargs.get('goals'),
             categories=kwargs.get('categories')
@@ -207,27 +207,27 @@ class BotState4(BaseState):
         try:
             tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
             if tg_user and tg_user.status == TgUser.Status.verified:
-                categories: str | None = self.get_categories(tg_user)
+                categories: str | None = self._get_categories(tg_user)
                 categories_list: list[str] = categories.split('\n')
                 if item.message.text == '/cancel':
-                    self.send_message(state='cancel', item=item)
-                    self.send_message(state='state4-state3', item=item)
+                    self._send_message(state='cancel', item=item)
+                    self._send_message(state='state4-state3', item=item)
                     self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
                 elif item.message.text in categories_list:
-                    self.set_category(tg_user, item.message.text)
-                    self.send_message(state='create', item=item, category=item.message.text)
+                    self._set_category(tg_user, item.message.text)
+                    self._send_message(state='create', item=item, category=item.message.text)
                     self.botSession.setState(BotState5(client=self.client, botSession=self.botSession))
                 else:
-                    self.send_message(state='error', item=item)
+                    self._send_message(state='error', item=item)
             else:
                 self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
-                self.send_message(state='state4-state2', item=item)
+                self._send_message(state='state4-state2', item=item)
         except TgUser.DoesNotExist:
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
-            self.send_message(state='state4-state1', item=item)
+            self._send_message(state='state4-state1', item=item)
 
     @staticmethod
-    def get_categories(tg_user) -> str | None:
+    def _get_categories(tg_user) -> str | None:
         """Method to get all users categories. Return string if categories exist, else None"""
         categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
             board__participants__user=tg_user.user,
@@ -240,7 +240,7 @@ class BotState4(BaseState):
             return None
 
     @staticmethod
-    def set_category(tg_user, category) -> None:
+    def _set_category(tg_user, category) -> None:
         """Method to write category in users entity"""
         category: GoalCategory = GoalCategory.objects.select_related('board').get(
             board__participants__user=tg_user.user,
@@ -251,7 +251,7 @@ class BotState4(BaseState):
         tg_user.selected_category = category
         tg_user.save()
 
-    def message_data(self, **kwargs) -> str:
+    def _message_data(self, **kwargs) -> str:
         """Method to define message data"""
         message: dict[str, str] = {
             'create': f"Для категории {kwargs.get('category')} введите название цели, которую хотите создать",
@@ -265,9 +265,9 @@ class BotState4(BaseState):
         }
         return message.get(kwargs.get('state'))
 
-    def send_message(self, **kwargs) -> None:
+    def _send_message(self, **kwargs) -> None:
         """Method to send a message by client entity"""
-        text: str = self.message_data(
+        text: str = self._message_data(
             state=kwargs.get('state'),
             categories=kwargs.get('categories'),
             category=kwargs.get('category')
@@ -286,19 +286,19 @@ class BotState5(BaseState):
         try:
             tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
             if tg_user and tg_user.status == TgUser.Status.not_verified:
-                self.send_message(state='state5-state2', item=item)
+                self._send_message(state='state5-state2', item=item)
                 self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
             if tg_user and tg_user.status == TgUser.Status.verified and not tg_user.selected_category:
-                self.send_message(state='state5-state3', item=item)
+                self._send_message(state='state5-state3', item=item)
                 self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
             elif tg_user and tg_user.status == TgUser.Status.verified and tg_user.selected_category:
                 if item.message.text == '/cancel':
-                    self.send_message(state='cancel', item=item)
-                    self.send_message(state='state5-state3', item=item)
+                    self._send_message(state='cancel', item=item)
+                    self._send_message(state='state5-state3', item=item)
                     self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
                 else:
-                    board_id, category_id, goal_id = self.create_goal(tg_user, item)
-                    self.send_message(
+                    board_id, category_id, goal_id = self._create_goal(tg_user, item)
+                    self._send_message(
                         state='success',
                         item=item,
                         category_id=category_id,
@@ -306,13 +306,13 @@ class BotState5(BaseState):
                         goal_id=goal_id
                     )
                     self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
-                    self.send_message(state='state5-state3', item=item)
+                    self._send_message(state='state5-state3', item=item)
         except TgUser.DoesNotExist:
-            self.send_message(state='state5-state1', item=item)
+            self._send_message(state='state5-state1', item=item)
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
 
     @staticmethod
-    def create_goal(tg_user, item) -> tuple[int, int, int]:
+    def _create_goal(tg_user, item) -> tuple[int, int, int]:
         """Method to create new goal. Return tuple with 3 parameters - board_id, category_id, goal_id"""
         new_goal: Goal = Goal.objects.create(
             user=tg_user.user,
@@ -321,7 +321,7 @@ class BotState5(BaseState):
         )
         return new_goal.category.board.id, new_goal.category.id, new_goal.id
 
-    def message_data(self, **kwargs) -> str:
+    def _message_data(self, **kwargs) -> str:
         """Method to define message data"""
         message: dict[str, str] = {
             'cancel': 'Операция отменена',
@@ -333,13 +333,12 @@ class BotState5(BaseState):
                              'или команду "/create" для создания цели',
             'state5-state2': 'Введите команду "/check_verification" для проверки статуса верификации бота',
             'state5-state1': 'Для начала работы воспользуйтесь командой "/start"'
-
         }
         return message.get(kwargs.get('state'))
 
-    def send_message(self, **kwargs) -> None:
+    def _send_message(self, **kwargs) -> None:
         """Method to send a message by client entity"""
-        text: str = self.message_data(
+        text: str = self._message_data(
             state=kwargs.get('state'),
             category_id=kwargs.get('category_id'),
             board_id=kwargs.get('board_id'),

@@ -35,11 +35,11 @@ class BaseState(ABC):
         pass
 
     @abstractmethod
-    def message_data(self, **kwargs):
+    def _message_data(self, **kwargs):
         """Abstract method to define message data"""
         pass
 
     @abstractmethod
-    def send_message(self, **kwargs):
+    def _send_message(self, **kwargs):
         """Abstract method to send a message by client entity"""
         pass
