@@ -1,3 +1,4 @@
+from django.db.models import QuerySet
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,14 +10,16 @@ from bot.serializers import TgUserSerializer
 # ----------------------------------------------------------------
 # TgUserUpdateView
 class TgUserUpdateView(generics.GenericAPIView):
-    queryset = TgUser.objects.all()
+    queryset: QuerySet[TgUser] = TgUser.objects.all()
     serializer_class = TgUserSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes: tuple = (IsAuthenticated,)
 
     def patch(self, request, *args, **kwargs):
+        """Method to handle PATCH request and call update method"""
         return self.update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
+        """Method to update users info such as status and current user field"""
         current_user = request.user
         tg_user = TgUser.objects.filter(
             verification_code=request.data.get('verification_code')
