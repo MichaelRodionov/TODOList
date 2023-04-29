@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from django.utils.crypto import get_random_string
 
 from bot.models import TgUser
@@ -11,7 +13,7 @@ from goals.models.goal import Goal
 class BotState1(BaseState):
     """State 1. Start state"""
 
-    def doSomething(self, **kwargs):
+    def doSomething(self, **kwargs) -> None:
         item = kwargs.get('item')
         if item.message.text == '/start':
             tg_user, created = self._check_user(item.message)
@@ -28,7 +30,7 @@ class BotState1(BaseState):
             self.send_message(state='error', item=item)
 
     @staticmethod
-    def _check_user(message):
+    def _check_user(message) -> Tuple[TgUser, bool]:
         tg_user, created = TgUser.objects.get_or_create(
             tg_user_id=message.from_.id,
             tg_chat_id=message.chat.id
@@ -50,7 +52,7 @@ class BotState1(BaseState):
 class BotState2(BaseState):
     """State 2. Wait verification"""
 
-    def doSomething(self, **kwargs):
+    def doSomething(self, **kwargs) -> None:
         item = kwargs.get('item')
         try:
             tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
@@ -89,10 +91,10 @@ class BotState2(BaseState):
 class BotState3(BaseState):
     """State 3. Bot verified"""
 
-    def doSomething(self, **kwargs):
+    def doSomething(self, **kwargs) -> None:
         item = kwargs.get('item')
         try:
-            tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
+            tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
             if tg_user and tg_user.status == TgUser.Status.verified:
                 if item.message.text == '/goals':
                     goals = self.get_goals(tg_user)
@@ -159,10 +161,10 @@ class BotState3(BaseState):
 class BotState4(BaseState):
     """State 4. Send categories, wait goal title"""
 
-    def doSomething(self, **kwargs):
+    def doSomething(self, **kwargs) -> None:
         item = kwargs.get('item')
         try:
-            tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
+            tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
             if tg_user and tg_user.status == TgUser.Status.verified:
                 categories = self.get_categories(tg_user)
                 categories_list = categories.split('\n')
@@ -224,7 +226,7 @@ class BotState4(BaseState):
 class BotState5(BaseState):
     """State 5. Create object"""
 
-    def doSomething(self, **kwargs):
+    def doSomething(self, **kwargs) -> None:
         item = kwargs.get('item')
         try:
             tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
