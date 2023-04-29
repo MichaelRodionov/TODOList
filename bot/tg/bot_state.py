@@ -265,8 +265,8 @@ class BotState5(BaseState):
         message = {
             'cancel': 'Операция отменена',
             'success': f"Ваша цель создана\n"
-                       f"mrodionov.fun/boards/{kwargs.get('category_id')}"
-                       f"/categories/{kwargs.get('board_id')}"
+                       f"mrodionov.fun/boards/{kwargs.get('board_id')}"
+                       f"/categories/{kwargs.get('category_id')}"
                        f"/goals?goal={kwargs.get('goal_id')}"
         }
         print(message)
