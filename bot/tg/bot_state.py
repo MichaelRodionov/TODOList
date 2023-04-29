@@ -241,15 +241,12 @@ class BotState5(BaseState):
                 else:
                     tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
                     board_id, category_id, goal_id = self.create_goal(tg_user, item)
-                    data = {
-                        'board_id': board_id,
-                        'category_id': category_id,
-                        'goal_id': goal_id
-                    }
                     self.send_message(
                         state='success',
                         item=item,
-                        category=data
+                        category_id=category_id,
+                        board_id=board_id,
+                        goal_id=goal_id
                     )
                     self.botSession.setState(BotState3(client=self.client, botSession=self.botSession))
         except TgUser.DoesNotExist:
@@ -266,17 +263,20 @@ class BotState5(BaseState):
 
     def message_data(self, **kwargs) -> str:
         message = {
+            'cancel': 'Операция отменена',
             'success': f"Ваша цель создана\n"
-                       f"mrodionov.fun/boards/{kwargs.get('category').get('board_id')}"
-                       f"/categories/{kwargs.get('category').get('board_id')}"
-                       f"/goals?goal={kwargs.get('category').get('goal_id')}",
-            'cancel': 'Операция отменена'
+                       f"mrodionov.fun/boards/{kwargs.get('category_id')}"
+                       f"/categories/{kwargs.get('board_id')}"
+                       f"/goals?goal={kwargs.get('goal_id')}"
         }
+        print(message)
         return message.get(kwargs.get('state'))
 
     def send_message(self, **kwargs) -> None:
         text = self.message_data(
             state=kwargs.get('state'),
-            category=kwargs.get('category'),
+            category_id=kwargs.get('category_id'),
+            board_id=kwargs.get('board_id'),
+            goal_id=kwargs.get('goal_id')
         )
         self.client.send_message(chat_id=kwargs.get('item').message.chat.id, text=text)
