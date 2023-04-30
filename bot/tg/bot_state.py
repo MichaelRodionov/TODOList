@@ -5,6 +5,7 @@ from django.utils.crypto import get_random_string
 
 from bot.models import TgUser
 from bot.tg.base_state import BaseState
+from goals.models.board import BoardParticipant
 from goals.models.category import GoalCategory
 from goals.models.goal import Goal
 
@@ -149,6 +150,7 @@ class BotState3(BaseState):
     def _get_goals(tg_user) -> str | None:
         """Method to get all users goals. Return string if goals exist, else None"""
         goals: QuerySet[Goal] = Goal.objects.select_related('category').filter(
+
             category__board__participants__user=tg_user.user,
             category__board__is_deleted=False,
             category__is_deleted=False
@@ -162,6 +164,7 @@ class BotState3(BaseState):
     def _get_categories(tg_user) -> str | None:
         """Method to get all users categories. Return string if categories exist, else None"""
         categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
+            board__participants__role__in=[BoardParticipant.Role.owner, BoardParticipant.Role.writer],
             board__participants__user=tg_user.user,
             board__is_deleted=False,
             is_deleted=False
@@ -230,6 +233,7 @@ class BotState4(BaseState):
     def _get_categories(tg_user) -> str | None:
         """Method to get all users categories. Return string if categories exist, else None"""
         categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
+            board__participants__role__in=[BoardParticipant.Role.owner, BoardParticipant.Role.writer],
             board__participants__user=tg_user.user,
             board__is_deleted=False,
             is_deleted=False

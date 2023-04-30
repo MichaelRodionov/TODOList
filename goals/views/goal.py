@@ -65,5 +65,6 @@ class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
         with transaction.atomic():
             entity.status = Goal.Status.archived
             entity.save(update_fields=('status',))
-            entity.comment_set.delete()
+            for comment in entity.comment_set.all():
+                comment.delete()
         return entity

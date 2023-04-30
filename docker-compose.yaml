@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "./manage.py migrate bot 0003 && ./manage.py migrate goals && ./manage.py migrate bot"
+      sh -c "./manage.py makemigrations && ./manage.py migrate"
 
     depends_on:
       db:
