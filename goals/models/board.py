@@ -6,6 +6,13 @@ from goals.models.dates_model_mixin import DatesModelMixin
 # ----------------------------------------------------------------
 # board model
 class Board(DatesModelMixin):
+    """
+    Model representing a board
+
+    Attrs:
+        - title: Title of Board
+        - is_deleted: This field defines status of board (deleted or not)
+    """
     title = models.CharField(
         verbose_name='Название',
         max_length=255
@@ -26,6 +33,14 @@ class Board(DatesModelMixin):
 # ----------------------------------------------------------------
 # board participant model
 class BoardParticipant(DatesModelMixin):
+    """
+    Model representing a board participant
+
+    Attrs:
+        - board: Related board
+        - user: Related user
+        - role: Role of board participants. Defines by class Role
+    """
     class Role(models.IntegerChoices):
         owner = 1, "Владелец"
         writer = 2, "Редактор"

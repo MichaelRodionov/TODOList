@@ -21,7 +21,7 @@ class BotSession:
 
     def doSomething(self, **kwargs) -> Any:
         """Action method for bot: do some logic, then set next state"""
-        return self._state.doSomething(**kwargs)
+        return self._state.doSomething(**kwargs)  # type: ignore
 
     def run_bot(self) -> None:
         """Method to run telegram bot"""

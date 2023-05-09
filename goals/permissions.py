@@ -7,9 +7,9 @@ from goals.models.goal import Goal
 
 
 # ----------------------------------------------------------------
-# boar permissions
+# board permissions
 class BoardPermissions(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj) -> bool:
         """Method to check board permissions"""
         if not request.user.is_authenticated:
             return False
@@ -65,7 +65,7 @@ class GoalPermissions(permissions.BasePermission):
 
 
 # ----------------------------------------------------------------
-# comments permissions
+# comment permissions
 class CommentPermissions(permissions.BasePermission):
     def has_object_permission(self, request, view, obj) -> bool:
         """Method to check comment permissions"""

@@ -7,6 +7,15 @@ from goals.models.dates_model_mixin import DatesModelMixin
 # ----------------------------------------------------------------
 # category model
 class GoalCategory(DatesModelMixin):
+    """
+    Model representing a category
+
+    Attrs:
+        - board: Related board
+        - title: Title of category
+        - user: Related user
+        - is_deleted: This field defines status of category (deleted or not)
+    """
     board = models.ForeignKey(
         Board,
         verbose_name='Доска',

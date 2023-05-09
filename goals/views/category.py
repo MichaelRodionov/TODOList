@@ -13,15 +13,33 @@ from goals.serializers.category import CategoryCreateSerializer, CategorySeriali
 # ----------------------------------------------------------------
 # category views
 class CategoryCreateView(generics.CreateAPIView):
-    """View to handle POST request to create category entity"""
+    """
+    View to handle POST request to create category entity
+
+    Attrs:
+        - model: Category model
+        - permission_classes: defines permissions for this APIView
+        - serializer_class: defines serializer class for this APIView
+    """
     model = GoalCategory
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = CategoryCreateSerializer
 
 
 class CategoryListView(generics.ListAPIView):
-    """View to handle GET request to get list of category entities"""
-    permission_classes: tuple = (permissions.IsAuthenticated, CategoryPermissions)
+    """
+    View to handle GET request to get list of category entities
+
+    Attrs:
+        - permission_classes: defines permissions for this APIView
+        - serializer_class: defines serializer class for this APIView
+        - pagination_class: defines pagination type for this APIView
+        - filter_backends: defines collection of filtering options for this APIView
+        - filterset_fields: defines collection of fields to filter
+        - ordering_fields: defines collection of ordering options for this APIView
+        - search_fields: defines collection of search options for this APIView
+    """
+    permission_classes: list = [permissions.IsAuthenticated, CategoryPermissions]
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
     filter_backends: tuple = (
@@ -34,8 +52,13 @@ class CategoryListView(generics.ListAPIView):
     ordering: tuple = ('title',)
     search_fields: tuple = ('title', 'board__title')
 
-    def get_queryset(self) -> QuerySet:
-        """Method to redefine queryset for category"""
+    def get_queryset(self) -> QuerySet[GoalCategory]:
+        """
+        Method to define queryset to get category by some filters
+
+        Returns:
+            - QuerySet
+        """
         return GoalCategory.objects.select_related('board').filter(
             board__participants__user=self.request.user,
             board__is_deleted=False,
@@ -44,13 +67,22 @@ class CategoryListView(generics.ListAPIView):
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """View to handle GET, PUT, DELETE requests of definite category entity"""
-    serializer_class = CategorySerializer
-    permission_classes: tuple = (permissions.IsAuthenticated, CategoryPermissions)
+    """
+    View to handle GET, PUT, DELETE requests of definite category entity
 
-    def get_queryset(self) -> QuerySet:
+    Attrs:
+        - serializer_class: defines serializer class for this APIView
+        - permission_classes: defines permissions for this APIView
+    """
+    serializer_class = CategorySerializer
+    permission_classes: list = [permissions.IsAuthenticated, CategoryPermissions]
+
+    def get_queryset(self) -> QuerySet[GoalCategory]:
         """
-        Method to redefine queryset for category
+        Method to define queryset to get category by some filters
+
+        Returns:
+            - QuerySet
         """
         return GoalCategory.objects.select_related('board').filter(
             board__participants__user=self.request.user,
@@ -58,12 +90,17 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
             is_deleted=False
         )
 
-    def perform_destroy(self, entity: GoalCategory) -> GoalCategory:
+    def perform_destroy(self, entity: GoalCategory) -> None:
         """
-        Method to redefine DELETE request
+        Method to redefine DELETE logic
+
+        Params:
+            - entity: Category entity
+
+        Returns:
+            - Category entity with updated field is_deleted and updated related entities (delete status fields)
         """
         with transaction.atomic():
             entity.is_deleted = True
             entity.save(update_fields=('is_deleted',))
             entity.goal_set.update(status=Goal.Status.archived)
-        return entity

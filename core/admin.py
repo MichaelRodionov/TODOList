@@ -7,6 +7,18 @@ from core.models import User
 # ----------------------------------------------------------------
 # custom admin
 class CustomUserAdmin(UserAdmin):
+    """
+    Model representing a user admin
+
+    Attrs:
+        - model: User model
+        - list_display: defines collection of fields to display
+        - search_fields: defines collection of fields to search
+        - list_filter: defines collection of fields to filter
+        - exclude: defines fields to be hidden
+        - readonly_fields: defines fields only to read
+        - fieldsets: defines custom subsections
+    """
     model = User
     list_display = ('username', 'email', 'first_name', 'last_name', 'sex')
     search_fields = ('email', 'first_name', 'last_name', 'username')

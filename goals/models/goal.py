@@ -7,6 +7,18 @@ from goals.models.dates_model_mixin import DatesModelMixin
 # ----------------------------------------------------------------
 # goal model
 class Goal(DatesModelMixin):
+    """
+    Model representing a category
+
+    Attrs:
+        - user: Related user
+        - category: Related category
+        - title: Title of goal
+        - description: Description of goal
+        - status: Status of goal. Defines by class Status
+        - priority: Priority of goal. Defines by class Priority
+        - due_date: Due date of goal
+    """
     class Status(models.IntegerChoices):
         to_do = 1, "К выполнению"
         in_progress = 2, "В процессе"

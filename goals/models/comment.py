@@ -8,6 +8,14 @@ from goals.models.goal import Goal
 # ----------------------------------------------------------------
 # comment model
 class Comment(DatesModelMixin):
+    """
+    Model representing a board
+
+    Attrs:
+        - goal: Related goal
+        - user: Related user
+        - text: Comment content
+    """
     goal = models.ForeignKey(
         Goal,
         verbose_name='Цель',

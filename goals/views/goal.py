@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.db import transaction
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,15 +15,34 @@ from goals.serializers.goal import GoalCreateSerializer, GoalSerializer
 # ----------------------------------------------------------------
 # goals views
 class GoalCreateView(generics.CreateAPIView):
-    """View to handle POST request to create goal entity"""
+    """
+    View to handle POST request to create goal entity
+
+    Attrs:
+        - model: Category model
+        - permission_classes: defines permissions for this APIView
+        - serializer_class: defines serializer class for this APIView
+    """
     model = Goal
-    permission_classes: tuple = (permissions.IsAuthenticated,)
+    permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = GoalCreateSerializer
 
 
 class GoalListView(generics.ListAPIView):
-    """View to handle GET request to get list of goal entities"""
-    permission_classes: tuple = (permissions.IsAuthenticated, GoalPermissions)
+    """
+    View to handle GET request to get list of goal entities
+
+    Attrs:
+        - permission_classes: defines permissions for this APIView
+        - serializer_class: defines serializer class for this APIView
+        - pagination_class: defines pagination type for this APIView
+        - filter_backends: defines collection of filtering options for this APIView
+        - filterset_fields: defines collection of fields to filter
+        - ordering_fields: defines collection of ordering options for this APIView
+        - ordering: defines base ordering for this APIView
+        - search_fields: defines collection of search options for this APIView
+    """
+    permission_classes: list = [permissions.IsAuthenticated, GoalPermissions]
     serializer_class = GoalSerializer
     pagination_class = LimitOffsetPagination
     filter_backends: tuple = (
@@ -35,8 +56,13 @@ class GoalListView(generics.ListAPIView):
     ordering: tuple = ('title',)
     search_fields: tuple = ('title',)
 
-    def get_queryset(self) -> QuerySet:
-        """Method to redefine queryset for goal"""
+    def get_queryset(self) -> QuerySet[Goal]:
+        """
+        Method to define queryset to get goal by some filters
+
+        Returns:
+            - QuerySet
+        """
         return Goal.objects.select_related('category').filter(
             category__board__participants__user=self.request.user,
             category__board__is_deleted=False,
@@ -45,12 +71,17 @@ class GoalListView(generics.ListAPIView):
 
 
 class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """View to handle GET, PUT, DELETE requests of definite goal entity"""
-    model = Goal
-    serializer_class = GoalSerializer
-    permission_classes: tuple = (permissions.IsAuthenticated, GoalPermissions)
+    """
+    View to handle GET, PUT, DELETE requests of definite goal entity
 
-    def get_queryset(self) -> QuerySet:
+    Attrs:
+        - serializer_class: defines serializer class for this APIView
+        - permission_classes: defines permissions for this APIView
+    """
+    serializer_class = GoalSerializer
+    permission_classes: list = [permissions.IsAuthenticated, GoalPermissions]
+
+    def get_queryset(self) -> QuerySet[Goal]:
         """Method to redefine queryset for goal"""
         return Goal.objects.select_related('category').filter(
             category__board__participants__user=self.request.user,
@@ -58,13 +89,18 @@ class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
             category__is_deleted=False
         ).exclude(status=Goal.Status.archived)
 
-    def perform_destroy(self, entity: Goal) -> Goal:
+    def perform_destroy(self, entity: Goal) -> None:
         """
-        Method to redefine DELETE request
+        Method to define queryset to get goal by some filters
+
+        Params:
+            - entity: Goal entity
+
+        Returns:
+            - QuerySet
         """
         with transaction.atomic():
             entity.status = Goal.Status.archived
             entity.save(update_fields=('status',))
             for comment in entity.comment_set.all():
                 comment.delete()
-        return entity

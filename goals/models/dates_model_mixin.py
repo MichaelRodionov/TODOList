@@ -5,6 +5,13 @@ from django.utils import timezone
 # ----------------------------------------------------------------
 # custom mixin
 class DatesModelMixin(models.Model):
+    """
+    Parent model defines dates
+
+    Attrs:
+        - created: Date of creation
+        - updated: Date of modification
+    """
     created = models.DateTimeField(
         verbose_name="Дата создания"
     )

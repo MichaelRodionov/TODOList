@@ -8,9 +8,14 @@ from goals.models.board import BoardParticipant, Board
 
 # ----------------------------------------------------------------
 # board serializers
-
-
 class BoardParticipantSerializer(serializers.ModelSerializer):
+    """
+    Board participant serializer
+
+    Attrs:
+        - role: ChoiceField defines board participant's role
+        - user: SlugRelatedField defines board participant's relation with User entity'
+    """
     role = serializers.ChoiceField(
         required=True,
         choices=BoardParticipant.Role.choices[1:]
@@ -29,15 +34,33 @@ class BoardParticipantSerializer(serializers.ModelSerializer):
 # ----------------------------------------------------------------
 # board serializers
 class BoardListSerializer(serializers.ModelSerializer):
+    """
+    Board list serializer
+    """
     class Meta:
         model = Board
         fields: str = "__all__"
 
 
 class BoardCreateSerializer(serializers.ModelSerializer):
+    """
+    Board create serializer
+
+    Attrs:
+        - user: HiddenField defines current user
+    """
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-    def create(self, validated_data):
+    def create(self, validated_data) -> Board:
+        """
+        Redefined function to create a new board and a new board participant with owner role
+
+        Params:
+            - validated_data: dictionary with validated data of Board entity
+
+        Returns:
+            Board object
+        """
         user = validated_data.pop("user")
         board = Board.objects.create(**validated_data)
         BoardParticipant.objects.create(
@@ -54,6 +77,13 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 
 
 class BoardSerializer(serializers.ModelSerializer):
+    """
+    Board serializer
+
+    Attrs:
+        - participants: BoardParticipantSerializer defines all participants of board
+        - user: HiddenField defines current user
+    """
     participants = BoardParticipantSerializer(
         many=True
     )
@@ -61,8 +91,20 @@ class BoardSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    def update(self, entity: Board, validated_data: dict) -> Board:
-        """Method to add new participants to board/delete participants or change role"""
+    def update(self, entity: Board, validated_data) -> Board:
+        """
+        Redefined method to add new participants to board/delete participants or change role
+
+        Params:
+            - entity: Board entity
+            - validated_data: dictionary with validated data of Board entity
+
+        Returns:
+             Updated Board object
+
+        Raises:
+            - IntegrityError (if you are trying to add yourself as a participant)
+        """
         board_owner = validated_data.pop('user')
         elders: QuerySet = entity.participants.exclude(user=board_owner).select_related('user')
         newbies: dict = {user.get('user').id: user for user in validated_data.pop('participants')}
