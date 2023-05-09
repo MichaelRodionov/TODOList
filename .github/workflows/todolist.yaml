@@ -19,7 +19,7 @@ jobs:
             "./core/migrations/"
             "./goals/migrations/"
             "./bot/migrations/"
-            "./tests/conftest/"
+            "./tests/conftest.py/"
           max-line-length: "120"
           ignore: F401
 
