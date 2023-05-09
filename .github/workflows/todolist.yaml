@@ -40,7 +40,7 @@ jobs:
           poetry config virtualenvs.create false
           poetry install
       - name: Run Mypy
-        run: poetry run mypy .
+        run: poetry run python3.11 -m mypy .
 
   build_and_push_image:
     env:
