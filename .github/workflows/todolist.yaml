@@ -33,6 +33,7 @@ jobs:
       run: |
         python3 -m pip install poetry
         poetry config virtualenvs.create false
+        poetry env use 3.11
         poetry install
     - name: Run Mypy
       run: poetry run mypy .
