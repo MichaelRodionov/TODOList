@@ -370,7 +370,9 @@ class BotState5(BaseState):
         return None
 
     def _send_message(self, **kwargs) -> None:
-        """Method to send a message by client entity"""
+        """
+        Method to send a message by client entity
+        """
         text: Optional[str] = self._message_data(
             state=kwargs.get('state'),
             category_id=kwargs.get('category_id'),
