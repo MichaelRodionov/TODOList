@@ -29,10 +29,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install Poetry
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+          source $HOME/.poetry/env
+      - name: Install Dependencies
+        run: poetry install
       - name: Run Mypy
-        uses: jashparekh/mypy-action@v2
-        with:
-          path: '.'
+        run: poetry run mypy .
 
   build_and_push_image:
     env:
