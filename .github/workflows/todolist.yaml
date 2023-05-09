@@ -34,10 +34,13 @@ jobs:
           python3 -m pip install poetry
           poetry config virtualenvs.create false
           poetry install
+        with:
+          python-version: "3.11"
       - name: Run Mypy
         run: poetry run mypy .
         with:
           python-version: "3.11"
+
 
   build_and_push_image:
     env:
