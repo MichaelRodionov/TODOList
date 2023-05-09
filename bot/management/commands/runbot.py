@@ -6,6 +6,7 @@ from bot.tg.bot_session import BotSession
 # ----------------------------------------------------------------
 # command class
 class Command(BaseCommand):
+
     help = 'Run telegram bot'
 
     def handle(self, *args, **options) -> None:
