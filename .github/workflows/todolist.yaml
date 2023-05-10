@@ -58,8 +58,8 @@ jobs:
       - name: render configuration files
         run: |
           mkdir todo_list_app
-          cat docker-compose-tests.yaml | envsubst > todo_list_app/docker-compose.yaml
-          cat .env.todolist | envsubst > todo_list_tests/.env
+          cat docker-compose-tests.yaml | envsubst > todo_list_app_tests/docker-compose.yaml
+          cat .env.todolist | envsubst > todo_list_app_tests/.env
 
       - name: copy files to server
         uses: appleboy/scp-action@master
@@ -67,7 +67,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          source: "todo_list_app_tests/docker-compose.yaml"
+          source: "todo_list_app_tests\/docker-compose.yaml"
           target: "todo_list_tests"
           strip_components: 1
 
