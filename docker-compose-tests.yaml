@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "mypy ."
+      sh -c "poetry run mypy ."
 
   db:
     image: postgres
