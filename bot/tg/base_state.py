@@ -11,35 +11,49 @@ class BaseState(ABC):
 
     @property
     def botSession(self) -> Any:
-        """Getter for the bot session"""
+        """
+        Getter for the bot session
+        """
         return self._botSession
 
     @botSession.setter
     def botSession(self, botSession) -> None:
-        """Setter for the bot session"""
+        """
+        Setter for the bot session
+        """
         self._botSession = botSession
 
     @property
     def client(self) -> Any:
-        """Getter for the client"""
+        """
+        Getter for the client
+        """
         return self._client
 
     @client.setter
     def client(self, client) -> None:
-        """Setter for the client"""
+        """
+        Setter for the client
+        """
         self._client = client
 
     @abstractmethod
     def doSomething(self, **kwargs):
-        """Abstract action method for bot: do some logic, then set next state"""
+        """
+        Abstract action method for bot: do some logic, then set next state
+        """
         pass
 
     @abstractmethod
     def _message_data(self, **kwargs):
-        """Abstract method to define message data"""
+        """
+        Abstract method to define message data
+        """
         pass
 
     @abstractmethod
     def _send_message(self, **kwargs):
-        """Abstract method to send a message by client entity"""
+        """
+        Abstract method to send a message by client entity
+        """
         pass

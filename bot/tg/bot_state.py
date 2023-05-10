@@ -5,18 +5,21 @@ from django.utils.crypto import get_random_string
 
 from bot.models import TgUser
 from bot.tg.base_state import BaseState
-from goals.models.board import BoardParticipant
 from goals.models.category import GoalCategory
 from goals.models.goal import Goal
 
 
 # ----------------------------------------------------------------
-# BotState1
 class BotState1(BaseState):
     """State 1. Start state"""
 
     def doSomething(self, **kwargs) -> None:
-        """Action method for bot: do some logic, then set next state"""
+        """
+        Action method for bot: do some logic, then set next state
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         item: Any | None = kwargs.get('item')
         if item:
             if item.message.text == '/start':
@@ -35,20 +38,29 @@ class BotState1(BaseState):
             else:
                 self._send_message(state='error', item=item)
 
-    @staticmethod
-    def _check_user(message) -> Tuple[TgUser, bool]:
+    def _check_user(self, message) -> Tuple[TgUser, bool]:
         """
         Method to check user existence.
-        Return tuple with user and boolean flag - True if user created, False if user exists
+
+        Params:
+            - message: message with next data - user, text, chat, date
+
+        Returns:
+            - Return tuple with user and boolean flag - True if user created, False if user exists
         """
-        tg_user, created = TgUser.objects.get_or_create(
-            tg_user_id=message.from_.id,
-            tg_chat_id=message.chat.id
-        )
+        tg_user, created = self.botSession.dao.get_or_create_user(message)
         return tg_user, created
 
     def _message_data(self, **kwargs) -> Optional[str]:
-        """Method to define message data"""
+        """
+        Method to define message data
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - text for message from bot or None in case of no info about bot state
+        """
         message: dict[str, str] = {
             'success': 'Приветствую в телеграм боте TODOList! Ожидайте ваш код верификации!',
             'error': 'Для начала работы воспользуйтесь командой /start',
@@ -61,7 +73,12 @@ class BotState1(BaseState):
         return None
 
     def _send_message(self, **kwargs) -> None:
-        """Method to send a message by client entity"""
+        """
+        Method to send a message by telegram client
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         text: Optional[str] = self._message_data(state=kwargs.get('state'))
         item: Any | None = kwargs.get('item')
         if item:
@@ -69,16 +86,20 @@ class BotState1(BaseState):
 
 
 # ----------------------------------------------------------------
-# BotState2
 class BotState2(BaseState):
     """State 2. Wait verification"""
 
     def doSomething(self, **kwargs) -> None:
-        """Action method for bot: do some logic, then set next state"""
+        """
+        Action method for bot: do some logic, then set next state
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         item: Any | None = kwargs.get('item')
         try:
             if item:
-                tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
+                tg_user: TgUser = self.botSession.dao.get_user_or_exception(item.message)
                 code: str = get_random_string(length=10)
                 if item.message.text == '/check_verification':
                     if tg_user and tg_user.status == TgUser.Status.verified:
@@ -97,12 +118,26 @@ class BotState2(BaseState):
 
     @staticmethod
     def _update_user(tg_user: TgUser, code: str) -> None:
-        """Method to write verification code in users entity"""
+        """
+        Method to write verification code in users entity
+
+        Params:
+            - tg_user: telegram user
+            - code: string of verification code
+        """
         tg_user.verification_code = code
         tg_user.save(update_fields=('verification_code',))
 
     def _message_data(self, **kwargs) -> Optional[str]:
-        """Method to define message data"""
+        """
+        Method to define message data
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - text for message from bot or None in case of no info about bot state
+        """
         message: dict[str, str] = {
             'verified': 'Вы успешно верифицировали бота',
             'nonverified': f"Бот не прошел верификацию, ваш код: {kwargs.get('code')}",
@@ -118,7 +153,12 @@ class BotState2(BaseState):
         return None
 
     def _send_message(self, **kwargs) -> None:
-        """Method to send a message by client entity"""
+        """
+        Method to send a message by telegram client
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         text: Optional[str] = self._message_data(state=kwargs.get('state'), code=kwargs.get('code'))
         item: Any | None = kwargs.get('item')
         if item:
@@ -126,16 +166,20 @@ class BotState2(BaseState):
 
 
 # ----------------------------------------------------------------
-# BotState3
 class BotState3(BaseState):
     """State 3. Bot verified"""
 
     def doSomething(self, **kwargs) -> None:
-        """Action method for bot: do some logic, then set next state"""
+        """
+        Action method for bot: do some logic, then set next state
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         item: Any | None = kwargs.get('item')
         try:
             if item:
-                tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
+                tg_user: TgUser = self.botSession.dao.get_user_or_exception(item.message)
                 if tg_user and tg_user.status == TgUser.Status.verified:
                     if item.message.text == '/goals':
                         goals: str | None = self._get_goals(tg_user)
@@ -159,36 +203,48 @@ class BotState3(BaseState):
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
             self._send_message(state='state3-state1', item=item)
 
-    @staticmethod
-    def _get_goals(tg_user) -> str | None:
-        """Method to get all users goals. Return string if goals exist, else None"""
-        goals: QuerySet[Goal] = Goal.objects.select_related('category').filter(
+    def _get_goals(self, tg_user) -> str | None:
+        """
+        Method to get all users goals. Return string if goals exist, else None
 
-            category__board__participants__user=tg_user.user,
-            category__board__is_deleted=False,
-            category__is_deleted=False
-        ).exclude(status=Goal.Status.archived)
+        Params:
+            - tg_user: telegram user
+
+        Returns:
+            - string with titles of goals from database or None in case of no goals
+        """
+        goals: QuerySet[Goal] = self.botSession.dao.get_goals(tg_user)
         if goals:
             return '\n'.join(goal.title for goal in goals)
         else:
             return None
 
-    @staticmethod
-    def _get_categories(tg_user) -> str | None:
-        """Method to get all users categories. Return string if categories exist, else None"""
-        categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
-            board__participants__role__in=[BoardParticipant.Role.owner, BoardParticipant.Role.writer],
-            board__participants__user=tg_user.user,
-            board__is_deleted=False,
-            is_deleted=False
-        )
+    def _get_categories(self, tg_user) -> str | None:
+        """
+        Method to get all users categories. Return string if categories exist, else None
+
+        Params:
+            - tg_user: telegram user
+
+        Returns:
+            - string with titles of categories from database or None in case of no categories
+        """
+        categories: QuerySet[GoalCategory] = self.botSession.dao.get_categories(tg_user)
         if categories:
             return '\n'.join(category.title for category in categories)
         else:
             return None
 
     def _message_data(self, **kwargs) -> Optional[str]:
-        """Method to define message data"""
+        """
+        Method to define message data
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - text for message from bot or None in case of no info about bot state
+        """
         message: dict[str, str] = {
             'empty_goals': 'Вы еще не создавали цели',
             'empty_cats': 'Вы еще не создавали категории',
@@ -206,7 +262,12 @@ class BotState3(BaseState):
         return None
 
     def _send_message(self, **kwargs) -> None:
-        """Method to send a message by client entity"""
+        """
+        Method to send a message by telegram client
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         text: Optional[str] = self._message_data(
             state=kwargs.get('state'),
             goals=kwargs.get('goals'),
@@ -223,11 +284,16 @@ class BotState4(BaseState):
     """State 4. Send categories, wait goal title"""
 
     def doSomething(self, **kwargs) -> None:
-        """Action method for bot: do some logic, then set next state"""
+        """
+        Action method for bot: do some logic, then set next state
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         item: Any | None = kwargs.get('item')
         try:
             if item:
-                tg_user: TgUser = TgUser.objects.get(tg_user_id=item.message.from_.id)
+                tg_user: TgUser = self.botSession.dao.get_user_or_exception(item.message)
                 if tg_user and tg_user.status == TgUser.Status.verified:
                     categories: str | None = self._get_categories(tg_user)
                     if categories:
@@ -249,34 +315,43 @@ class BotState4(BaseState):
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
             self._send_message(state='state4-state1', item=item)
 
-    @staticmethod
-    def _get_categories(tg_user) -> str | None:
-        """Method to get all users categories. Return string if categories exist, else None"""
-        categories: QuerySet[GoalCategory] = GoalCategory.objects.select_related('board').filter(
-            board__participants__role__in=[BoardParticipant.Role.owner, BoardParticipant.Role.writer],
-            board__participants__user=tg_user.user,
-            board__is_deleted=False,
-            is_deleted=False
-        )
+    def _get_categories(self, tg_user) -> str | None:
+        """
+        Method to get all users categories. Return string if categories exist, else None
+
+        Params:
+            - tg_user: telegram user
+
+        Returns:
+            - string with titles of categories from database or None in case of no categories
+        """
+        categories: QuerySet[GoalCategory] = self.botSession.dao.get_categories(tg_user)
         if categories:
             return '\n'.join(category.title for category in categories)
         else:
             return None
 
-    @staticmethod
-    def _set_category(tg_user, category) -> None:
-        """Method to write category in users entity"""
-        category_: GoalCategory = GoalCategory.objects.select_related('board').get(
-            board__participants__user=tg_user.user,
-            board__is_deleted=False,
-            is_deleted=False,
-            title__iexact=category
-        )
-        tg_user.selected_category = category_
-        tg_user.save()
+    def _set_category(self, tg_user, category) -> None:
+        """
+        Method to write category in users entity
+
+        Params:
+            - tg_user: telegram user
+            - category: chosen category
+        """
+
+        self.botSession.dao.set_category(tg_user, category)
 
     def _message_data(self, **kwargs) -> Optional[str]:
-        """Method to define message data"""
+        """
+        Method to define message data
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - text for message from bot or None in case of no info about bot state
+        """
         message: dict[str, str] = {
             'create': f"Для категории {kwargs.get('category')} введите название цели, которую хотите создать",
             'cancel': 'Операция отменена',
@@ -293,7 +368,12 @@ class BotState4(BaseState):
         return None
 
     def _send_message(self, **kwargs) -> None:
-        """Method to send a message by client entity"""
+        """
+        Method to send a message by telegram client
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         text: Optional[str] = self._message_data(
             state=kwargs.get('state'),
             categories=kwargs.get('categories'),
@@ -310,11 +390,16 @@ class BotState5(BaseState):
     """State 5. Create object"""
 
     def doSomething(self, **kwargs) -> None:
-        """Action method for bot: do some logic, then set next state"""
+        """
+        Action method for bot: do some logic, then set next state
+
+        Params:
+            - kwargs: named (keyword) arguments
+        """
         item: Any | None = kwargs.get('item')
         try:
             if item:
-                tg_user = TgUser.objects.get(tg_user_id=item.message.from_.id)
+                tg_user: TgUser = self.botSession.dao.get_user_or_exception(item.message)
                 if tg_user and tg_user.status == TgUser.Status.not_verified:
                     self._send_message(state='state5-state2', item=item)
                     self.botSession.setState(BotState2(client=self.client, botSession=self.botSession))
@@ -341,18 +426,28 @@ class BotState5(BaseState):
             self._send_message(state='state5-state1', item=item)
             self.botSession.setState(BotState1(client=self.client, botSession=self.botSession))
 
-    @staticmethod
-    def _create_goal(tg_user, item) -> tuple[int, int, int]:
-        """Method to create new goal. Return tuple with 3 parameters - board_id, category_id, goal_id"""
-        new_goal: Goal = Goal.objects.create(
-            user=tg_user.user,
-            category=tg_user.selected_category,
-            title=item.message.text
-        )
-        return new_goal.category.board.id, new_goal.category.id, new_goal.id
+    def _create_goal(self, tg_user, item) -> tuple[int, int, int]:
+        """
+        Method to create new goal. Return tuple with 3 parameters - board_id, category_id, goal_id
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - tuple with board id, category id, goal id
+        """
+        return self.botSession.dao.create_goal(tg_user, item)
 
     def _message_data(self, **kwargs) -> Optional[str]:
-        """Method to define message data"""
+        """
+        Method to define message data
+
+        Params:
+            - kwargs: named (keyword) arguments
+
+        Returns:
+            - text for message from bot or None in case of no info about bot state
+        """
         message: dict[str, str] = {
             'cancel': 'Операция отменена',
             'success': f"Ваша цель создана\n"
@@ -371,7 +466,10 @@ class BotState5(BaseState):
 
     def _send_message(self, **kwargs) -> None:
         """
-        Method to send a message by client entity
+        Method to send a message by telegram client
+
+        Params:
+            - kwargs: named (keyword) arguments
         """
         text: Optional[str] = self._message_data(
             state=kwargs.get('state'),

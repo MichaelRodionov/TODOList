@@ -34,6 +34,7 @@ djangorestframework-stubs = { extras = ["compatible-mypy"], version = "^3.14.0" 
 #
 #[tool.django-stubs.extra_requirements]
 #drf = ["djangorestframework-stubs"]
+pytest-cov = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core"]
