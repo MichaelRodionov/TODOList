@@ -67,7 +67,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          source: "todo_list_app_tests\/docker-compose.yaml"
+          source: "todo_list_app_tests/docker-compose.yaml"
           target: "todo_list_tests"
           strip_components: 1
 
