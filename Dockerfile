@@ -11,6 +11,7 @@ COPY bot/. ./bot
 COPY todolist/. ./todolist
 COPY tests/. ./tests
 COPY pytest.ini .
+COPY mypy.ini .
 COPY manage.py .
 COPY README.md .
 
