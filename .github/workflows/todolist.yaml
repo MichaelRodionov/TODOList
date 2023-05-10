@@ -91,9 +91,24 @@ jobs:
             cd todo_list_tests
             echo ${{ secrets.PASSWORD }} | sudo -S docker-compose up -d
 
-  deploy:
+  clean_useless_data:
     runs-on: ubuntu-latest
     needs: mypy_check_and_pytest
+    steps:
+      - name: run application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            echo ${{ secrets.PASSWORD }} | sudo -S docker-compose down
+            echo ${{secrets.SERVER_PASS}} | sudo -S docker system prune
+            echo ${{ secrets.PASSWORD }} | sudo -S rm -r todo_list_tests
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: clean_useless_data
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -143,7 +158,7 @@ jobs:
           target: "todo_list_server"
           strip_components: 1
 
-  clean_useless_data:
+  run_app:
     runs-on: ubuntu-latest
     needs: deploy
     steps:
@@ -154,22 +169,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            echo ${{ secrets.PASSWORD }} | sudo -S docker-compose down
-            echo ${{secrets.SERVER_PASS}} | sudo -S docker system prune -a -f
-            echo ${{ secrets.PASSWORD }} | sudo -S rm -r todo_list_tests
-
-  run_app:
-    runs-on: ubuntu-latest
-    needs: clean_useless_data
-    steps:
-      - name: run application
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          script: |
-            echo ${{ secrets.PASSWORD }} | sudo -S docker-compose down
-            echo ${{ secrets.PASSWORD }} | sudo -S rm -r todo_list_tests
             cd todo_list_server
             echo ${{ secrets.PASSWORD }} | sudo -S docker-compose up -d
