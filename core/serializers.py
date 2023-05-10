@@ -35,7 +35,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         Raises:
             - ValidationError (in case of password repeat is wrong)
-
         """
         if attrs.get('password') != attrs.pop('password_repeat'):
             raise serializers.ValidationError('Password mismatch')
