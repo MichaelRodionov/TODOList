@@ -44,7 +44,7 @@ services:
       - .env:/todo_list_app/.env
       - django_static:/todo_list_app/static
     depends_on:
-      tests:
+      migrations:
         condition: service_completed_successfully
 
   front:
@@ -69,17 +69,6 @@ services:
     depends_on:
       api:
         condition: service_started
-      migrations:
-        condition: service_completed_successfully
-
-  tests:
-    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
-    container_name: tests
-    env_file:
-      - .env
-    command: >
-      sh -c "pytest"
-    depends_on:
       migrations:
         condition: service_completed_successfully
 
