@@ -25,7 +25,9 @@ Python v.3.11
 Poetry v.1.4.1   
 Django v.4.1.7   
 PostgreSQL   
-Django REST Framework v.3.14.0   
+Django REST Framework v.3.14.0  
+django-pytest v.0.2.0   
+pytest-factoryboy v.2.5.1   
 VK OAuth2.0   
 Gunicorn v.20.10.0   
 Nginx   
@@ -87,6 +89,10 @@ git push  # push to repository
 Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml   
 An application will run on your hostname   
 All features of telegram bot will be available with server start
+## Pytest
+Core and Goal features are covered by 96% tests
 ## Database management   
 A special postgres_adminer container has been launched for convenient database management and monitoring.  
 By going to hostname:8080 you can send SQL queries, view tables, etc.
+## OpenAPI documentation
+You can open API documentation by hostname:8000/schema/redoc/

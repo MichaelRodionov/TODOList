@@ -75,7 +75,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "pytest --cov=."
+      sh -c "pytest --cov-append --cov=./core tests/ && pytest --cov-append --cov=./goals tests/"
     depends_on:
       migrations:
         condition: service_completed_successfully

@@ -33,7 +33,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "pytest"
+      sh -c "pytest --cov-append --cov=./core tests/ && pytest --cov-append --cov=./goals tests/"
     depends_on:
       db:
         condition: service_healthy
