@@ -3,6 +3,7 @@ from typing import Optional, Union
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.http import HttpRequest
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
@@ -16,6 +17,7 @@ from goals.serializers.board import BoardCreateSerializer, BoardListSerializer, 
 
 # ----------------------------------------------------------------
 # board views
+@extend_schema(tags=['Board'])
 class BoardCreateView(generics.CreateAPIView):
     """
     View to handle POST request to create board entity
@@ -29,7 +31,15 @@ class BoardCreateView(generics.CreateAPIView):
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = BoardCreateSerializer
 
+    @extend_schema(
+        description="Create new board instance",
+        summary="Create board",
+    )
+    def post(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().post(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Board'])
 class BoardListView(generics.ListAPIView):
     """
     View to handle GET request to get list of board entities
@@ -57,7 +67,15 @@ class BoardListView(generics.ListAPIView):
             is_deleted=False
         )
 
+    @extend_schema(
+        description="Get list of boards",
+        summary="Boards list",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Board'])
 class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     View to handle GET, PUT, DELETE requests of definite board entity
@@ -118,3 +136,32 @@ class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
             Goal.objects.filter(category__board=entity).update(
                 status=Goal.Status.archived
             )
+
+    @extend_schema(
+        description="Get one board",
+        summary="Retrieve board",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Full update board instance",
+        summary="Full update board",
+    )
+    def put(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Partial update board instance",
+        summary="Partial update board",
+        deprecated=True
+    )
+    def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Set 'is_deleted' status to board",
+        summary="Delete goal instance",
+    )
+    def delete(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().delete(request, *args, **kwargs)

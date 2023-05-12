@@ -40,6 +40,8 @@ services:
     depends_on:
       tests:
         condition: service_completed_successfully
+    volumes:
+      - ./:/todo_list_app/
 
   front:
     image: sermalenk/skypro-front:lesson-38
@@ -73,7 +75,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "pytest --cov=goals && pytest --cov=core"
+      sh -c "pytest --cov=."
     depends_on:
       migrations:
         condition: service_completed_successfully

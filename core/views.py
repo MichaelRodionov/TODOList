@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseBase
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
@@ -17,6 +18,7 @@ from core.serializers import UserRegistrationSerializer, UserDetailSerializer, U
 
 # ----------------------------------------------------------------
 # user views
+@extend_schema(tags=['User'])
 class UserCreateView(CreateAPIView):
     """
     View to handle registration
@@ -28,12 +30,24 @@ class UserCreateView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
 
+    @extend_schema(
+        description="Create new user instance",
+        summary="Registrate user",
+    )
+    def post(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().post(request, *args, **kwargs)
 
+
+@extend_schema(tags=['User'])
 class UserLoginView(CreateAPIView):
     """
     View to handle login
     """
 
+    @extend_schema(
+        description="Authenticate user instance",
+        summary="Login user",
+    )
     def post(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
         """
         Method to redefine post logic
@@ -59,6 +73,7 @@ class UserLoginView(CreateAPIView):
         raise AuthenticationFailed('Invalid username or password')
 
 
+@extend_schema(tags=['User'])
 class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
     """
     View to handle profile page, update users info, logout
@@ -98,7 +113,37 @@ class UserDetailUpdateLogoutView(RetrieveUpdateDestroyAPIView):
         logout(request)
         return Response('Successful logout', status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        description="Get one user",
+        summary="Retrieve user",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
 
+    @extend_schema(
+        description="Full update user instance",
+        summary="Full update user",
+    )
+    def put(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Partial update user instance",
+        summary="Partial update user",
+        deprecated=True
+    )
+    def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Logout from web app",
+        summary="Logout user",
+    )
+    def delete(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().delete(request, *args, **kwargs)
+
+
+@extend_schema(tags=['User'])
 class UserUpdatePasswordView(UpdateAPIView):
     """View to handle password change"""
     serializer_class = UserChangePasswordSerializer
@@ -106,3 +151,17 @@ class UserUpdatePasswordView(UpdateAPIView):
 
     def get_object(self) -> Any:
         return self.request.user
+
+    @extend_schema(
+        description="Update users password",
+        summary="Update password",
+    )
+    def put(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        deprecated=True
+    )
+    def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().patch(request, *args, **kwargs)
+

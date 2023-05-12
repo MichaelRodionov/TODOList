@@ -82,22 +82,21 @@ DATABASES = {
     'default': env.db()
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgres',
-#         'HOST': '127.0.0.1',
-#         'PORT': '5432',
-#         'TEST': {
-#             'NAME': 'test_db'
-#         }
-#     }
-# }
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 
-# ----------------------------------------------------------------
+# OpenAPI settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'TODOList API',
+    'DESCRIPTION': 'This is an API for task manager application TODOList',
+    'VERSION': '1.0.0'
+}
+
+
 # authentication setup
 AUTHENTICATION_BACKENDS = (
     "social_core.backends.vk.VKOAuth2",
@@ -133,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -145,14 +143,11 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR.joinpath('static')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Telegram bot key
 TG_BOT_KEY = env('BOT_TOKEN')

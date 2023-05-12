@@ -104,7 +104,7 @@ jobs:
           script: |
             echo ${{ secrets.PASSWORD }} | sudo -S docker-compose down
             echo ${{secrets.SERVER_PASS}} | sudo -S docker system prune
-            echo ${{ secrets.PASSWORD }} | sudo -S rm -r todo_list_tests
+#            echo ${{ secrets.PASSWORD }} | sudo -S rm -r todo_list_tests
 
   deploy:
     runs-on: ubuntu-latest

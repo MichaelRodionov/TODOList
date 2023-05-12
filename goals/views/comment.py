@@ -1,7 +1,10 @@
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, filters
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from goals.models.comment import Comment
 from goals.models.goal import Goal
@@ -11,6 +14,7 @@ from goals.serializers.comment import CommentCreateSerializer, CommentSerializer
 
 # ----------------------------------------------------------------
 # comments views
+@extend_schema(tags=['Comment'])
 class CommentCreateView(generics.CreateAPIView):
     """
     View to handle POST request to create comment entity
@@ -24,7 +28,15 @@ class CommentCreateView(generics.CreateAPIView):
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = CommentCreateSerializer
 
+    @extend_schema(
+        description="Create new comment instance",
+        summary="Create comment",
+    )
+    def post(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().post(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Comment'])
 class CommentListView(generics.ListAPIView):
     """
     View to handle GET request to get list of comment entities
@@ -62,7 +74,15 @@ class CommentListView(generics.ListAPIView):
             goal__category__is_deleted=False,
         ).exclude(goal__status=Goal.Status.archived)
 
+    @extend_schema(
+        description="Get list of comments",
+        summary="Comments list",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Comment'])
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     View to handle GET, PUT, DELETE requests of definite comment entity
@@ -86,3 +106,32 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
             goal__category__board__is_deleted=False,
             goal__category__is_deleted=False,
         ).exclude(goal__status=Goal.Status.archived)
+
+    @extend_schema(
+        description="Get one comment",
+        summary="Retrieve comment",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Full update comment instance",
+        summary="Full update comment",
+    )
+    def put(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Partial update comment instance",
+        summary="Partial update comment",
+        deprecated=True
+    )
+    def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Full delete comment",
+        summary="Delete comment instance",
+    )
+    def delete(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().delete(request, *args, **kwargs)

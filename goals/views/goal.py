@@ -1,10 +1,11 @@
-from typing import Optional
-
 from django.db import transaction
 from django.db.models import QuerySet
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, filters
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from goals.filters import GoalDateFilter
 from goals.models.goal import Goal
@@ -14,6 +15,7 @@ from goals.serializers.goal import GoalCreateSerializer, GoalSerializer
 
 # ----------------------------------------------------------------
 # goals views
+@extend_schema(tags=['Goal'])
 class GoalCreateView(generics.CreateAPIView):
     """
     View to handle POST request to create goal entity
@@ -27,7 +29,15 @@ class GoalCreateView(generics.CreateAPIView):
     permission_classes: list = [permissions.IsAuthenticated]
     serializer_class = GoalCreateSerializer
 
+    @extend_schema(
+        description="Create new goal instance",
+        summary="Create goal",
+    )
+    def post(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().post(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Goal'])
 class GoalListView(generics.ListAPIView):
     """
     View to handle GET request to get list of goal entities
@@ -69,7 +79,15 @@ class GoalListView(generics.ListAPIView):
             category__is_deleted=False
         ).exclude(status=Goal.Status.archived)
 
+    @extend_schema(
+        description="Get list of goals",
+        summary="Goals list",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
 
+
+@extend_schema(tags=['Goal'])
 class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     View to handle GET, PUT, DELETE requests of definite goal entity
@@ -104,3 +122,32 @@ class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
             entity.save(update_fields=('status',))
             for comment in entity.comment_set.all():
                 comment.delete()
+
+    @extend_schema(
+        description="Get one goal",
+        summary="Retrieve goal",
+    )
+    def get(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Full update goal instance",
+        summary="Full update goal",
+    )
+    def put(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Partial update goal instance",
+        summary="Partial update goal",
+        deprecated=True
+    )
+    def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Set 'archived' status to goal",
+        summary="Delete goal instance",
+    )
+    def delete(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
+        return super().delete(request, *args, **kwargs)

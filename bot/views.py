@@ -1,4 +1,5 @@
 from django.db.models import QuerySet
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -10,6 +11,7 @@ from bot.serializers import TgUserSerializer
 
 # ----------------------------------------------------------------
 # TgUserUpdateView
+@extend_schema(tags=['Telegram Bot'])
 class TgUserUpdateView(generics.GenericAPIView):
     """
     View to update telegram users field in case of bot activation
@@ -23,6 +25,10 @@ class TgUserUpdateView(generics.GenericAPIView):
     serializer_class = TgUserSerializer
     permission_classes: list = [IsAuthenticated]
 
+    @extend_schema(
+        description="Update users verification code field",
+        summary="Telegram Bot Verification",
+    )
     def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
         """
         Method to handle PATCH request and call update method
