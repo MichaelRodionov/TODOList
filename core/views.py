@@ -164,4 +164,3 @@ class UserUpdatePasswordView(UpdateAPIView):
     )
     def patch(self, request: Request, *args: tuple, **kwargs: dict) -> Response:
         return super().patch(request, *args, **kwargs)
-
