@@ -16,7 +16,8 @@ services:
       retries: 3
 
   migrations:
-    build: .
+    build:
+      context: .
     container_name: migrations
     env_file:
       - .env
@@ -27,7 +28,8 @@ services:
         condition: service_healthy
 
   api:
-    build: .
+    build:
+      context: .
     container_name: api
     env_file:
       - .env
@@ -36,16 +38,53 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      migrations:
+      tests:
         condition: service_completed_successfully
+    volumes:
+      - ./:/todo_list_app/
 
   front:
-    image: sermalenk/skypro-front:lesson-35
+    image: sermalenk/skypro-front:lesson-38
     container_name: front
     ports:
       - "80:80"
     depends_on:
-      api:
+      bot:
         condition: service_started
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  bot:
+    build:
+      context: .
+    container_name: tg_bot
+    env_file:
+      - .env
+    command: >
+      sh -c "./manage.py runbot"
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./bot:/todo_list_app/bot
+
+  tests:
+    build:
+      context: .
+    container_name: tests
+    env_file:
+      - .env
+    command: >
+      sh -c "pytest --cov-append --cov=./core tests/ && pytest --cov-append --cov=./goals tests/"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/todo_list_app/
+
+  postgres_adminer:
+    container_name: postgres_adminer
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"

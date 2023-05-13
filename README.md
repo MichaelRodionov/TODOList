@@ -18,12 +18,39 @@ This is a simple application that allows you to manage your todo list (task mana
 * Uploading goals to CSV/JSON format.
 * Adding notes to your goal.
 * Full work in the mobile app.
+* Get all your goal by telegram bot.
+* Create new goal by telegram bot.
 ## Technology stack   
 Python v.3.11   
 Poetry v.1.4.1   
 Django v.4.1.7   
-Django REST Framework v.3.14.0
-## Server start
+PostgreSQL   
+Django REST Framework v.3.14.0  
+django-pytest v.0.2.0   
+pytest-factoryboy v.2.5.1   
+VK OAuth2.0   
+Gunicorn v.20.10.0   
+Nginx   
+Docker  
+Docker-compose   
+CI/CD pipeline by GitHub Actions
+## Local start  
+Create local .env file with the next data:  
+``` python
+SECRET_KEY='your django key'
+DATABASE_URL=postgres://postgres:postgres@db/todo_list
+DEBUG=True
+VK_ID='your vk id'
+VK_KEY='your vk secure key'
+BOT_TOKEN='your bot token'
+```
+Run API, DB, Frontend and Migrations containers by:
+``` python
+docker-compose up --build
+```
+An application will run at http://localhost   
+All features of telegram bot will be available with local start
+## Server start 
 Clone repository
 ``` python
 git clone https://github.com/MichaelRodionov/TODOList.git
@@ -45,6 +72,11 @@ PASSWORD # your host password
 # Docker
 DOCKERHUB_TOKEN  # your dockerhub token
 DOCKERHUB_USERNAME  # your dockerhub username
+# VK OAuth2.0
+VK_ID  # your VK application ID
+VK_KEY  # your VK application secure key
+# Telegram bot
+BOT_TOKEN # your telegram bot token given by BotFather
 ```
 Add remote to your GitHub repository by repository URL   
 Push code to your repository
@@ -54,4 +86,20 @@ git commit -m 'add project'  # initial commit
 git push  # push to repository
 ```
 ---
-Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml
+Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml   
+An application will run on your hostname   
+All features of telegram bot will be available with server start
+## Testing
+Testing done using:
+- django-pytest v.0.2.0  
+- pytest-factoryboy v.2.5.1   
+- pytest-cov v.4.0.0   
+
+Core and Goal features are covered by 97% tests (checked by pytest-cov)
+## Database management   
+A special postgres_adminer container has been launched for convenient database management and monitoring.  
+By going to hostname:8080 you can send SQL queries, view tables, etc.
+## OpenAPI documentation
+You can open API documentation by GET request to the API container:   
+- Local start - localhost:8000/schema/redoc/
+- Server start - your_hostname:8000/schema/redoc/
