@@ -1,15 +1,21 @@
 from django.contrib.auth.models import AbstractUser
-from django.db.models import TextChoices, CharField, DateTimeField
+from django.db.models import TextChoices, CharField
 
 
+# ----------------------------------------------------------------
+# user model
 class User(AbstractUser):
+    """
+    Model representing a user
+
+    Attrs:
+        - sex: User sex (defines by class Sex)
+    """
     class Sex(TextChoices):
         MALE = "male", "Мужской"
         FEMALE = "female", "Женский"
 
     sex = CharField(max_length=7, choices=Sex.choices, null=True)
-    last_login = DateTimeField('last login', editable=False, auto_now_add=True)
-    date_joined = DateTimeField('date joined', editable=False, auto_now_add=True)
 
     class Meta:
         verbose_name = "Пользователь"

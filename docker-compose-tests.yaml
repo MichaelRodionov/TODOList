@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mypy_check:
+    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    container_name: mypy_check
+    env_file:
+      - .env
+    command: >
+      sh -c "poetry run mypy ."
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    container_name: test_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 3s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      mypy_check:
+        condition: service_completed_successfully
+
+  tests:
+    image: ${DOCKERHUB_USERNAME}/todolist_docker:${GITHUB_REF_NAME}-${GITHUB_RUN_ID}
+    container_name: tests
+    env_file:
+      - .env
+    command: >
+      sh -c "pytest --cov-append --cov=./core tests/ && pytest --cov-append --cov=./goals tests/"
+    depends_on:
+      db:
+        condition: service_healthy
