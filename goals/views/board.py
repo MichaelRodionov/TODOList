@@ -1,8 +1,5 @@
-from typing import Optional, Union
-
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
-from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.pagination import LimitOffsetPagination

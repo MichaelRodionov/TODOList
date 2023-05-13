@@ -1,4 +1,8 @@
+from typing import Any
+
 from rest_framework import permissions
+from rest_framework.request import Request
+from rest_framework.views import APIView
 
 from goals.models.board import BoardParticipant
 from goals.models.category import GoalCategory
@@ -9,8 +13,18 @@ from goals.models.goal import Goal
 # ----------------------------------------------------------------
 # board permissions
 class BoardPermissions(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj) -> bool:
-        """Method to check board permissions"""
+    def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
+        """
+        Method to check board permissions
+
+        Attrs:
+            - request: HttpRequest
+            - view: APIView
+            - obj: Board object
+
+        Returns:
+            - bool: Result of queryset (queryset depends on request method)
+        """
         if not request.user.is_authenticated:
             return False
         if request.method in permissions.SAFE_METHODS:
@@ -25,8 +39,18 @@ class BoardPermissions(permissions.BasePermission):
 # ----------------------------------------------------------------
 # category permissions
 class CategoryPermissions(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj) -> bool:
-        """Method to check category permissions"""
+    def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
+        """
+        Method to check category permissions
+
+        Attrs:
+            - request: HttpRequest
+            - view: APIView
+            - obj: Board object
+
+        Returns:
+            - bool: Result of queryset (queryset depends on request method)
+        """
         if request.method in permissions.SAFE_METHODS:
             return GoalCategory.objects.select_related('board').filter(
                 board__participants__user=request.user,
@@ -46,8 +70,18 @@ class CategoryPermissions(permissions.BasePermission):
 # ----------------------------------------------------------------
 # goal permissions
 class GoalPermissions(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj) -> bool:
-        """Method to check goal permissions"""
+    def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
+        """
+        Method to check goal permissions
+
+        Attrs:
+            - request: HttpRequest
+            - view: APIView
+            - obj: Board object
+
+        Returns:
+            - bool: Result of queryset (queryset depends on request method)
+        """
         if request.method in permissions.SAFE_METHODS:
             return Goal.objects.select_related('category').filter(
                 category__board__participants__user=request.user,
@@ -67,8 +101,18 @@ class GoalPermissions(permissions.BasePermission):
 # ----------------------------------------------------------------
 # comment permissions
 class CommentPermissions(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj) -> bool:
-        """Method to check comment permissions"""
+    def has_object_permission(self, request: Request, view: APIView, obj: Any) -> bool:
+        """
+        Method to check comment permissions
+
+        Attrs:
+            - request: HttpRequest
+            - view: APIView
+            - obj: Board object
+
+        Returns:
+            - bool: Result of queryset (queryset depends on request method)
+        """
         if request.method in permissions.SAFE_METHODS:
             return Comment.objects.select_related('goal').filter(
                 goal__category__board__participants__user=request.user,

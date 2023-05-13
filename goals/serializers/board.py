@@ -14,7 +14,7 @@ class BoardParticipantSerializer(serializers.ModelSerializer):
 
     Attrs:
         - role: ChoiceField defines board participant's role
-        - user: SlugRelatedField defines board participant's relation with User entity'
+        - user: SlugRelatedField defines board participant's relation with User entity
     """
     role = serializers.ChoiceField(
         required=True,
