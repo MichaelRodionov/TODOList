@@ -79,6 +79,8 @@ services:
     depends_on:
       migrations:
         condition: service_completed_successfully
+    volumes:
+      - ./:/todo_list_app/
 
   postgres_adminer:
     container_name: postgres_adminer

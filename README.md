@@ -48,7 +48,7 @@ Run API, DB, Frontend and Migrations containers by:
 ``` python
 docker-compose up --build
 ```
-An application will run at http://localhost:80   
+An application will run at http://localhost   
 All features of telegram bot will be available with local start
 ## Server start 
 Clone repository
@@ -89,10 +89,17 @@ git push  # push to repository
 Deployment will be done automatically due to configured CI/CD process (GitHub Action pipeline) with the help of workflow todolist.yaml   
 An application will run on your hostname   
 All features of telegram bot will be available with server start
-## Pytest
-Core and Goal features are covered by 96% tests
+## Testing
+Testing done using:
+- django-pytest v.0.2.0  
+- pytest-factoryboy v.2.5.1   
+- pytest-cov v.4.0.0   
+
+Core and Goal features are covered by 97% tests (checked by pytest-cov)
 ## Database management   
 A special postgres_adminer container has been launched for convenient database management and monitoring.  
 By going to hostname:8080 you can send SQL queries, view tables, etc.
 ## OpenAPI documentation
-You can open API documentation by hostname:8000/schema/redoc/
+You can open API documentation by GET request to the API container:   
+- Local start - localhost:8000/schema/redoc/
+- Server start - your_hostname:8000/schema/redoc/

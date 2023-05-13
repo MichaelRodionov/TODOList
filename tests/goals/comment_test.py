@@ -1,11 +1,13 @@
 from typing import Any
 
 import pytest
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 from core.models import User
 from core.serializers import UserDetailSerializer
 from goals.models.board import BoardParticipant
+from goals.models.goal import Goal
 from goals.serializers.comment import CommentSerializer
 from tests.factories import BoardParticipantFactory, BoardFactory, CategoryFactory, GoalFactory, CommentFactory
 
@@ -102,7 +104,52 @@ class TestComment:
             'detail': 'You are allowed only to read, not to create'
         }
 
-        assert post_response.status_code == 403, 'Comment was not created successfully'
+        assert post_response.status_code == 403, 'Comment was created successfully'
+        assert post_response.data is not None, 'HttpResponseError'
+        assert post_response.data == expected_response
+
+    @pytest.mark.django_db
+    def test_create_comment_400(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Comment create test when goal status is archived
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 400
+            - Response data is not None
+            - response data == data from expected response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(
+            board=BoardFactory.create(),
+            user=user_auth.get('user'),
+            role=BoardParticipant.Role.writer
+        )
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        goal: Any = GoalFactory.create(category=category, user=user_auth.get('user'))
+        goal.status = Goal.Status.archived
+        goal.save()
+        post_response: Any = client.post(
+            '/goals/goal_comment/create',
+            data={
+                "text": "testComment",
+                "goal": goal.id
+            },
+            content_type='application/json',
+        )
+        expected_response: dict[str, list[ErrorDetail]] = {
+            'goal': [ErrorDetail(string="You can't create comment in archived goal", code='invalid')]
+        }
+
+        assert post_response.status_code == 400, 'Comment was created successfully'
         assert post_response.data is not None, 'HttpResponseError'
         assert post_response.data == expected_response
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from core.serializers import UserDetailSerializer
 from goals.models.board import Board, BoardParticipant
@@ -30,12 +30,14 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 
         Validation:
             - user's role (if role is reader, raise PermissionDenied)
+            - board status: raise ValidationError if board is deleted
 
         Returns:
             - Board entity
 
         Raises:
             - PermissionDenied
+            - ValidationError
         """
         current_user = self.context.get('request').user  # type: ignore
         board_participant = BoardParticipant.objects.filter(
@@ -46,6 +48,8 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
             raise PermissionDenied('Board participant not found')
         if board_participant.role == BoardParticipant.Role.reader:
             raise PermissionDenied('You are allowed only to read, not to create')
+        if entity.is_deleted:
+            raise ValidationError("You can't create category in deleted board")
         return entity
 
     class Meta:

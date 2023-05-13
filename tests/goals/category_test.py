@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 from core.models import User
@@ -92,7 +93,47 @@ class TestCategory:
             content_type='application/json',
         )
 
-        assert post_response.status_code == 403, 'Category was not created successfully'
+        assert post_response.status_code == 403, 'Category was created successfully'
+        assert post_response.data is not None, 'HttpResponseError'
+        assert post_response.data == expected_response
+
+    @pytest.mark.django_db
+    def test_create_category_400(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Category create test when board is deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 400
+            - Response data is not None
+            - response data == data from expected response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(
+            board=BoardFactory.create(),
+            user=user_auth.get('user'),
+            role=BoardParticipant.Role.writer
+        )
+        board_participant.board.is_deleted = True
+        board_participant.board.save()
+        expected_response: dict[str, list[ErrorDetail]] = {
+            'board': [ErrorDetail(string="You can't create category in deleted board", code='invalid')]
+        }
+
+        post_response: Any = client.post(
+            '/goals/goal_category/create',
+            data={'title': 'testCategory', 'board': board_participant.board.id},
+            content_type='application/json',
+        )
+        assert post_response.status_code == 400, 'Category was created successfully'
         assert post_response.data is not None, 'HttpResponseError'
         assert post_response.data == expected_response
 
@@ -141,7 +182,7 @@ class TestCategory:
         assert response.data.get('is_deleted') == expected_response.get('is_deleted'), 'Wrong is_deleted expected'
 
     @pytest.mark.django_db
-    def test_retrieve_board_403(self, client: Any, user_not_auth: User) -> None:
+    def test_retrieve_category_403(self, client: Any, user_not_auth: User) -> None:
         """
         Category retrieve test without authorization
 
@@ -172,6 +213,50 @@ class TestCategory:
         assert response.status_code == 403, 'Status code error'
         assert response.data is not None, 'HttpResponseError'
         assert response.data == expected_response, 'Wrong data'
+
+    @pytest.mark.django_db
+    def test_retrieve_category_404(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Category retrieve test when category is deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 404
+            - Response data is not None
+            - response data == data from expected response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        category: Any = CategoryFactory.create(
+            board=board_participant.board,
+            user=user_auth.get('user'),
+            is_deleted=True
+        )
+        response: Any = client.get(
+            f'/goals/goal_category/{category.id}',
+        )
+        not_expected_response: dict[str, list[ReturnDict]] = {
+            "id": response.data.get('id'),
+            "user": [
+                UserDetailSerializer(user_auth.get('user')).data
+            ],
+            "created": category.created,
+            "updated": category.updated,
+            "title": category.title,
+            "is_deleted": category.is_deleted
+        }
+
+        assert response.status_code == 404, 'Status code error'
+        assert response.data is not None, 'HttpResponseError'
+        assert response.data != not_expected_response, 'Wrong data'
 
     @pytest.mark.django_db
     def test_category_list(self, client: Any, user_auth: dict[str, Any]) -> None:
@@ -231,6 +316,40 @@ class TestCategory:
         response: Any = client.get('/goals/goal_category/list')
 
         assert response.status_code == 403, 'Status code error'
+        assert response.data is not None, 'HttpResponseError'
+        assert response.data == expected_response, 'Wrong data expected'
+
+    @pytest.mark.django_db
+    def test_category_list_deleted(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Category list test when some categories are deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 200
+            - Response data is not None
+            - response data is equal expected_response (you should get only two category, because first is deleted)
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        categories: Any = CategoryFactory.create_batch(3, board=board_participant.board, user=user_auth.get('user'))
+        categories[0].is_deleted = True
+        categories[0].save()
+        expected_response: list[ReturnDict] = [
+            CategorySerializer(categories[2]).data,
+            CategorySerializer(categories[1]).data,
+        ]
+        response: Any = client.get('/goals/goal_category/list')
+
+        assert response.status_code == 200, 'Status code error'
         assert response.data is not None, 'HttpResponseError'
         assert response.data == expected_response, 'Wrong data expected'
 
@@ -313,6 +432,47 @@ class TestCategory:
         assert put_response.status_code == 403, 'Category was edited successfully'
         assert put_response.data is not None, 'HttpResponseError'
         assert put_response.data == expected_response, 'Wrong data'
+
+    @pytest.mark.django_db
+    def test_update_category_404(self, client: Any, user_auth: dict[str, str]) -> None:
+        """
+        Category update test when category is deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 404
+            - Response data is not None
+            - Response data is not equal to not expected_response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        category.is_deleted = True
+        category.save()
+        not_expected_response: dict[str, str | list[ReturnDict]] = {
+            'title': 'testCategory_edited',
+            'user': [UserDetailSerializer(user_auth.get('user')).data]
+        }
+        put_response: Any = client.put(
+            f'/goals/goal_category/{category.id}',
+            data={
+                'title': 'testCategory_edited',
+                'board': board_participant.board.id
+            },
+            content_type='application/json',
+        )
+
+        assert put_response.status_code == 404, 'Category was edited successfully'
+        assert put_response.data is not None, 'HttpResponseError'
+        assert put_response.data != not_expected_response, 'Wrong data'
 
     @pytest.mark.django_db
     def test_delete_category(self, client: Any, user_auth: dict[str, Any]) -> None:

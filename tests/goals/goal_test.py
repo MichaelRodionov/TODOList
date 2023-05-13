@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.utils.serializer_helpers import ReturnDict
 
 from core.models import User
@@ -107,7 +108,51 @@ class TestGoal:
             'detail': 'You are allowed only to read, not to create'
         }
 
-        assert post_response.status_code == 403, 'Goal was not created successfully'
+        assert post_response.status_code == 403, 'Goal was created successfully'
+        assert post_response.data is not None, 'HttpResponseError'
+        assert post_response.data == expected_response
+
+    @pytest.mark.django_db
+    def test_create_goal_400(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Goal create test when category is deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 403
+            - Response data is not None
+            - response data == data from expected response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(
+            board=BoardFactory.create(),
+            user=user_auth.get('user'),
+            role=BoardParticipant.Role.writer
+        )
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        category.is_deleted = True
+        category.save()
+        post_response: Any = client.post(
+            '/goals/goal/create',
+            data={
+                "title": "testGoal",
+                "category": category.id
+            },
+            content_type='application/json',
+        )
+        expected_response: dict[str, list[ErrorDetail]] = {
+            'category': [ErrorDetail(string="You can't create goal in deleted category", code='invalid')]
+        }
+
+        assert post_response.status_code == 400, 'Goal was created successfully'
         assert post_response.data is not None, 'HttpResponseError'
         assert post_response.data == expected_response
 
@@ -203,6 +248,51 @@ class TestGoal:
         assert response.data == expected_response, 'Wrong data'
 
     @pytest.mark.django_db
+    def test_retrieve_goal_404(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Goal retrieve test when goal is archived
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 404
+            - Response data is not None
+            - response data == data from expected response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        goal: Any = GoalFactory.create(category=category, user=user_auth.get('user'), status=Goal.Status.archived)
+        response: Any = client.get(
+            f'/goals/goal/{goal.id}',
+        )
+        not_expected_response: dict[str, list[ReturnDict]] = {
+            "id": goal.id,
+            "user": [
+                UserDetailSerializer(user_auth.get('user')).data
+            ],
+            "created": goal.created,
+            "updated": goal.updated,
+            "title": goal.title,
+            "description": goal.description,
+            "status": goal.status,
+            "priority": goal.priority,
+            "due_date": goal.due_date,
+            "category": goal.category.id
+        }
+
+        assert response.status_code == 404, 'Status code error'
+        assert response.data is not None, 'HttpResponseError'
+        assert response.data != not_expected_response, 'Wrong id expected'
+
+    @pytest.mark.django_db
     def test_goal_list(self, client: Any, user_auth: dict[str, Any]) -> None:
         """
         Goal list test
@@ -262,6 +352,41 @@ class TestGoal:
         response: Any = client.get('/goals/goal/list')
 
         assert response.status_code == 403, 'Status code error'
+        assert response.data is not None, 'HttpResponseError'
+        assert response.data == expected_response, 'Wrong data expected'
+
+    @pytest.mark.django_db
+    def test_goal_list_deleted(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Goal list test when some goals are deleted
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 200
+            - Response data is not None
+            - response data is equal expected_response (you should get only two goals, because first is archived)
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        goals: Any = GoalFactory.create_batch(3, category=category, user=user_auth.get('user'))
+        goals[0].status = Goal.Status.archived
+        goals[0].save()
+        expected_response: list[ReturnDict] = [
+            GoalSerializer(goals[1]).data,
+            GoalSerializer(goals[2]).data,
+        ]
+        response: Any = client.get('/goals/goal/list')
+
+        assert response.status_code == 200, 'Status code error'
         assert response.data is not None, 'HttpResponseError'
         assert response.data == expected_response, 'Wrong data expected'
 
@@ -364,9 +489,60 @@ class TestGoal:
             content_type='application/json',
         )
 
-        assert put_response.status_code == 403, 'Board was edited successfully'
+        assert put_response.status_code == 403, 'Goal was edited successfully'
         assert put_response.data is not None, 'HttpResponseError'
         assert put_response.data == expected_response, 'Wrong data'
+
+    @pytest.mark.django_db
+    def test_update_goal_404(self, client: Any, user_auth: dict[str, Any]) -> None:
+        """
+        Goal update test when goal is archived
+
+        Params:
+            - client: A Django test client instance.
+            - user_auth: A fixture that create user instance and login
+
+        Checks:
+            - Response status code is 404
+            - Response data is not None
+            - Response data is not equal to not expected_response
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError
+        """
+        board_participant: Any = BoardParticipantFactory.create(user=user_auth.get('user'))
+        category: Any = CategoryFactory.create(board=board_participant.board, user=user_auth.get('user'))
+        goal: Any = GoalFactory.create(category=category, user=user_auth.get('user'))
+        goal.status = Goal.Status.archived
+        goal.save()
+        not_expected_response: dict[str, str | list[ReturnDict | ReturnDict] | Goal.Status] = {
+            "id": goal.id,
+            "user": [UserDetailSerializer(user_auth.get('user')).data],
+            "created": goal.created,
+            "updated": goal.updated,
+            "title": "testGoal_edited",
+            "description": 'testDescription',
+            "status": goal.status,
+            "priority": goal.priority,
+            "due_date": goal.due_date,
+            "category": goal.category.id
+        }
+        put_response: Any = client.put(
+            f'/goals/goal/{goal.id}',
+            data={
+                'title': 'testGoal_edited',
+                'category': category.id,
+                'description': 'testDescription'
+            },
+            content_type='application/json',
+        )
+
+        assert put_response.status_code == 404, 'Goal was edited successfully'
+        assert put_response.data is not None, 'HttpResponseError'
+        assert put_response.data != not_expected_response, 'Wrong data'
 
     @pytest.mark.django_db
     def test_delete_goal(self, client: Any, user_auth: dict[str, Any]) -> None:
